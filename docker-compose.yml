@@ -16,8 +16,9 @@ services:
   # initdb:
   #   build: .
   #   entrypoint: airflow initdb
-  #   depends_on:
-  #    - postgres
+  #   # uncomment to connect to remote-postgres
+  #   # env_file:
+  #   #   - .env/postgres.env
 
   webserver:
     build: .
