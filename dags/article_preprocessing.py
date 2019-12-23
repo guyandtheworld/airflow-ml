@@ -3,31 +3,22 @@ import datetime as dt
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
+from datetime import timedelta
 
-
-def greet():
-    print('Writing in file')
-    with open('greet.txt', 'a+', encoding='utf8') as f:
-        now = dt.datetime.now()
-        t = now.strftime("%Y-%m-%d %H:%M")
-        f.write(str(t) + '\n')
-    return 'Greeted'
-
-
-def respond():
-    return 'Greet Responded Again'
+from article_preprocessing_stages.hashing import greet
+from article_preprocessing_stages.text_extraction import respond
 
 
 default_args = {
-    'owner': 'airflow',
-    'start_date': dt.datetime(2018, 9, 24, 10, 00, 00),
+    'owner': 'alrtai',
+    'start_date': dt.datetime(2019, 12, 22, 00, 00, 00),
     'concurrency': 1,
     'retries': 0
 }
 
-with DAG('my_simple_dag',
+with DAG('article_preprocessing',
          default_args=default_args,
-         schedule_interval='*/10 * * * *',
+         schedule_interval=timedelta(minutes=1),
          ) as dag:
 
     opr_hello = BashOperator(task_id='say_Hi',
