@@ -131,3 +131,4 @@ dmypy.json
 # development postgres migrations
 .data
 config
+.vscode
