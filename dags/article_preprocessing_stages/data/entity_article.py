@@ -10,12 +10,14 @@ class EntityArticleIndex(mongoengine.Document):
     last_tracked = mongoengine.DateTimeField(required=True)
     total_articles = mongoengine.IntField()
     avg_articles_per_day = mongoengine.IntField()
+    history_processed = mongoengine.BooleanField(default=False)
     is_company = mongoengine.BooleanField(default=True)
+    actively_tracking = mongoengine.BooleanField(default=True)
 
     # eventually, risk types
     # risk scores
 
     meta = {
         'db_alias': 'core',
-        'collection': 'testing'
+        'collection': 'testing_company_index'
     }

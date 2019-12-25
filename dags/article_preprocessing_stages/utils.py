@@ -1,36 +1,32 @@
-import datetime
-
-
-from data import mongo_setup
 from data.entity_article import EntityArticleIndex
+from typing import List
 
 
-def create_company(name: str, is_company: bool) -> EntityArticleIndex:
-    # need to do it only once in our application
-    mongo_setup.global_init()
+def create_company(entities: dict) -> List[EntityArticleIndex]:
+    """
+    creates company by bulk
+    """
 
-    entity = EntityArticleIndex()
-    entity.entity_name = name
-    entity.last_tracked = datetime.datetime.now()
-    entity.is_company = is_company
+    to_insert = []
 
-    entities = []
-    for entity in range(5):
+    for entity in entities:
         new_entity = EntityArticleIndex(
-            entity_name=str(entity), last_tracked=datetime.datetime.now())
-        entities.append(new_entity)
+            entity_name=str(entity["entity_name"]),
+            last_tracked=entity["last_tracked"],
+            is_company=entity["is_company"])
+        to_insert.append(new_entity)
 
-    EntityArticleIndex.objects().insert(entities)
+    print("inserting {} items into db".format(len(entities)))
 
-    # try:
-    #     entity.save()
-    # except Exception as e:
-    #     resp = {"status": "connection error"}
-    #     print(resp)
-    #     print(e)
-
-    return entity
-
-
-if __name__ == "__main__":
-    create_company(name="asdfads", is_company=True)
+    try:
+        resp = EntityArticleIndex.objects().insert(to_insert)
+        resp = {"status": "success",
+                "data": [entity.entity_name for entity in resp]
+                }
+    except ConnectionError as e:
+        resp = {"status": "error",
+                "error": e}
+    except Exception as e:
+        resp = {"status": "error",
+                "error": e}
+    return resp
