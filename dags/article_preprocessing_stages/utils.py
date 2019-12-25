@@ -1,8 +1,8 @@
-from data.entity_article import EntityArticleIndex
+from data.entity import EntityIndex
 from typing import List
 
 
-def create_company(entities: dict) -> List[EntityArticleIndex]:
+def create_company(entities: dict) -> List[EntityIndex]:
     """
     creates company by bulk
     """
@@ -10,8 +10,8 @@ def create_company(entities: dict) -> List[EntityArticleIndex]:
     to_insert = []
 
     for entity in entities:
-        new_entity = EntityArticleIndex(
-            entity_name=str(entity["entity_name"]),
+        new_entity = EntityIndex(
+            entity_search_name=str(entity["entity_search_name"]),
             last_tracked=entity["last_tracked"],
             is_company=entity["is_company"])
         to_insert.append(new_entity)
@@ -19,9 +19,9 @@ def create_company(entities: dict) -> List[EntityArticleIndex]:
     print("inserting {} items into db".format(len(entities)))
 
     try:
-        resp = EntityArticleIndex.objects().insert(to_insert)
+        resp = EntityIndex.objects().insert(to_insert)
         resp = {"status": "success",
-                "data": [entity.entity_name for entity in resp]
+                "data": [entity.entity_search_name for entity in resp]
                 }
     except ConnectionError as e:
         resp = {"status": "error",

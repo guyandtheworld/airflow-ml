@@ -4,7 +4,7 @@ from google.cloud import storage
 from google.cloud.storage import Blob
 
 from data.mongo_setup import global_init
-from data.entity_article import EntityArticleIndex
+from data.entity import EntityIndex
 from utils import create_company
 
 
@@ -27,7 +27,7 @@ def index_company():
 
     # fetch the companies being tracked on our mongodb
     try:
-        objects = EntityArticleIndex.objects().filter(actively_tracking=True)
+        objects = EntityIndex.objects().filter(actively_tracking=True)
     except Exception as e:
         print(e)
         return
@@ -42,7 +42,7 @@ def index_company():
     if len(entities_to_be_tracked) > 0:
         skeletons = []
         for entity in entities_to_be_tracked:
-            obj = {"entity_name": entity,
+            obj = {"entity_search_name": entity,
                    "last_tracked": datetime.datetime.now(),
                    "is_company": True
                    }
@@ -52,23 +52,6 @@ def index_company():
         print(response)
     else:
         print("no items to insert")
-
-
-def index_articles():
-    """
-    indexes articles by maintaining a relationship
-    with the particular entity that is being
-    tracked.
-    * if history not processed, indexes history, change status
-    * plug-in scripts based on source
-    * updates tracking table when daily news processed
-    * auto-updates from the last date it was tracked
-    """
-    pass
-
-
-def greet():
-    print('Writing in file')
 
 
 if __name__ == "__main__":

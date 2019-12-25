@@ -2,9 +2,9 @@ import datetime
 import mongoengine
 
 
-class EntityArticleIndex(mongoengine.Document):
-    entity_id = mongoengine.IntField()
-    entity_name = mongoengine.StringField(required=True)
+class EntityIndex(mongoengine.Document):
+    entity_id = mongoengine.IntField(default=None)
+    entity_search_name = mongoengine.StringField(required=True)
     entity_tracking_init = mongoengine.DateTimeField(
         default=datetime.datetime.now)
     last_tracked = mongoengine.DateTimeField(required=True)
@@ -19,5 +19,5 @@ class EntityArticleIndex(mongoengine.Document):
 
     meta = {
         'db_alias': 'core',
-        'collection': 'testing_company_index'
+        'collection': 'test_company_index'
     }

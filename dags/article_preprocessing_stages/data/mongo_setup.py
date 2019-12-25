@@ -4,7 +4,7 @@ import os
 
 def global_init():
     alias = "core"
-    name = "testing_articles"
+    name = "test_indexes"
 
     try:
         data = {
