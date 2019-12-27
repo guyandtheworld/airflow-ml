@@ -8,6 +8,9 @@ from data.entity import EntityIndex
 from utils import create_company
 
 
+BUCKET_NAME = "alrt-ai-ps"
+
+
 def index_company():
     """
     * indexes new companies on our database
@@ -20,7 +23,7 @@ def index_company():
     # fetch companies being tracked on the bucket
     try:
         storage_client = storage.Client()
-        blobs = storage_client.list_blobs("alrt-ai-ps")
+        blobs = storage_client.list_blobs(BUCKET_NAME)
     except Exception as e:
         print(e)
         return
@@ -47,7 +50,7 @@ def index_company():
         for entity_id in entities_to_be_tracked:
             obj = {
                 "entity_id": entity_id,
-                "entity_search_name": entities_id_bucket[entity_id],
+                "entity_legal_name": entities_id_bucket[entity_id],
                 "last_tracked": datetime.datetime.now(),
                 "is_company": True
             }
