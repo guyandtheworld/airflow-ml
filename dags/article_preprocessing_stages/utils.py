@@ -11,6 +11,7 @@ def create_company(entities: dict) -> List[EntityIndex]:
 
     for entity in entities:
         new_entity = EntityIndex(
+            entity_id=entity["entity_id"],
             entity_search_name=str(entity["entity_search_name"]),
             last_tracked=entity["last_tracked"],
             is_company=entity["is_company"])

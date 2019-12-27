@@ -3,7 +3,7 @@ import mongoengine
 
 
 class EntityIndex(mongoengine.Document):
-    entity_id = mongoengine.IntField(default=None)
+    entity_id = mongoengine.IntField(required=True)
     entity_search_name = mongoengine.StringField(required=True)
     entity_tracking_init = mongoengine.DateTimeField(
         default=datetime.datetime.now)
