@@ -3,6 +3,12 @@ import mongoengine
 
 
 class EntityIndex(mongoengine.Document):
+    """
+    to be done
+    * risk scores
+    * aliases
+    * subsidiaries
+    """
     entity_id = mongoengine.IntField(required=True)
     entity_legal_name = mongoengine.StringField(required=True)
     last_tracked = mongoengine.DateTimeField(required=True)
@@ -16,9 +22,6 @@ class EntityIndex(mongoengine.Document):
     total_articles = mongoengine.IntField()
     avg_articles_per_day = mongoengine.IntField()
     history_processed = mongoengine.BooleanField(default=False)
-
-    # eventually, risk types
-    # risk scores
 
     meta = {
         'db_alias': 'core',
