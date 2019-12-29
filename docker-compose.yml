@@ -16,8 +16,9 @@ services:
   # initdb:
   #   build: .
   #   entrypoint: airflow initdb
-  #   depends_on:
-  #    - postgres
+  #   # uncomment to connect to remote-postgres
+  #   # env_file:
+  #   #   - .env/postgres.env
 
   webserver:
     build: .
@@ -34,6 +35,8 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
 
   scheduler:
     build: .
@@ -49,3 +52,5 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json

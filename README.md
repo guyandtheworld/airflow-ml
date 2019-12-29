@@ -15,8 +15,12 @@ Airflow needs persistent storage to store the details of all the executions and 
 
 When setting up airflow for the first time, we need to run the migrations which is in the docker-compose so that the tables can be setup.
 
+### Migrations: Run only the first time for setting up tables
+
 `docker-compose up initdb` 
 
+### Running
+`docker-compose up --build`
 
 ## References
 
