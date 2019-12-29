@@ -50,14 +50,11 @@ def process_new_entity_data(new_entities):
                 record["entity_object"] = obj
                 records.append(record)
 
-    # with open("file.json", "r") as fp:
-    #     records = json.load(fp)
-
     bucket = storage_client.bucket(BUCKET_NAME)
     os.mkdir(DESTINATION_FOLDER)
 
     all_records = []
-    for record in records[3:7:2]:
+    for record in records:
         print("processing record: {}".format(record["file"]))
         metadata = {
             "source_file": record["file"],
