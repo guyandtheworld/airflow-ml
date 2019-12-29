@@ -8,12 +8,16 @@ from google.cloud.storage import Blob
 
 from data.entity import EntityIndex
 from data.mongo_setup import global_init
-from utils import process_company_json, write_article
+from utils import process_company_json, write_article, update_entities
 
 # should store sources in the database
 SOURCES = ["gdelt", "google_news"]
 BUCKET_NAME = "alrt-ai-ps"
 DESTINATION_FOLDER = "temp"
+
+
+def update_entity_tracking():
+    pass
 
 
 def process_new_entity_data(new_entities):
@@ -43,6 +47,11 @@ def process_new_entity_data(new_entities):
 
             for blob in blobs:
                 record = {}
+
+                # feels like this is a hack
+                dates = blob.name.split("/")[-1]
+                to_date = dates.strip(".json").split("Z-")[1]
+
                 record["file"] = blob.name
                 record["id"] = uid
                 record["name"] = name
@@ -50,11 +59,17 @@ def process_new_entity_data(new_entities):
                 record["entity_object"] = obj
                 records.append(record)
 
+        # updating the latest_tracking info
+        to_date = datetime.strptime(to_date, "%Y-%m-%dT%H:%M:%SZ")
+        print(to_date)
+        obj.last_tracked = to_date
+        obj.history_processed = True
+
     bucket = storage_client.bucket(BUCKET_NAME)
     os.mkdir(DESTINATION_FOLDER)
 
     all_records = []
-    for record in records:
+    for record in records[:10]:
         print("processing record: {}".format(record["file"]))
         metadata = {
             "source_file": record["file"],
@@ -71,6 +86,8 @@ def process_new_entity_data(new_entities):
                 "data": "no articles to insert"}
 
     if resp["status"] == "success":
+        print("updating entity status")
+        update_entities(new_entities)
         print(resp["data"])
     else:
         print("error: {}".format(resp["error"]))

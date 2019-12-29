@@ -60,6 +60,24 @@ def write_article(records: List[Article]) -> dict:
     return resp
 
 
+def update_entities(entities: List[EntityIndex]) -> dict:
+    """
+    update the entities in mongo db
+    """
+    try:
+        resp = EntityIndex.objects().save(entities)
+        resp = {"status": "success",
+                "data": "inserted {} articles into db".format(len(entities))
+                }
+    except ConnectionError as e:
+        resp = {"status": "error",
+                "error": e}
+    except Exception as e:
+        resp = {"status": "error",
+                "error": e}
+    return resp
+
+
 def index_articles(record: dict, metadata):
     """
     depending on the source the article is from
