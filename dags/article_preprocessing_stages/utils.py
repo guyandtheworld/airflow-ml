@@ -22,7 +22,6 @@ def create_company(entities: dict) -> List[EntityIndex]:
         new_entity = EntityIndex(
             entity_id=entity["entity_id"],
             entity_legal_name=str(entity["entity_legal_name"]),
-            last_tracked=entity["last_tracked"],
             is_company=entity["is_company"])
         to_insert.append(new_entity)
 
@@ -65,7 +64,8 @@ def update_entities(entities: List[EntityIndex]) -> dict:
     update the entities in mongo db
     """
     try:
-        resp = EntityIndex.objects().save(entities)
+        for obj in entities:
+            obj.save()
         resp = {"status": "success",
                 "data": "inserted {} articles into db".format(len(entities))
                 }

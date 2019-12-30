@@ -51,7 +51,6 @@ def index_company():
             obj = {
                 "entity_id": entity_id,
                 "entity_legal_name": entities_id_bucket[entity_id],
-                "last_tracked": datetime.datetime.now(),
                 "is_company": True
             }
             skeletons.append(obj)
