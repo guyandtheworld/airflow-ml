@@ -2,9 +2,9 @@ import hashlib
 import json
 import os
 
-from data.entity import EntityIndex
-from data.article import Article
-from data import source_processor
+from indexing_stages.data.entity import EntityIndex
+from indexing_stages.data.article import Article
+from indexing_stages.data import source_processor
 from typing import List
 
 

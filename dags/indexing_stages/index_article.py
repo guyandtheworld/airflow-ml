@@ -6,9 +6,10 @@ from datetime import datetime, timedelta
 from google.cloud import storage
 from google.cloud.storage import Blob
 
-from data.entity import EntityIndex
-from data.mongo_setup import global_init
-from utils import process_company_json, write_article, update_entities
+from indexing_stages.data.entity import EntityIndex
+from indexing_stages.data.mongo_setup import global_init
+from indexing_stages.utils import process_company_json, write_article, \
+    update_entities
 
 # should store sources in the database
 SOURCES = ["gdelt", "google_news"]
@@ -22,7 +23,7 @@ def process_entities(records, entities, storage_client):
     os.mkdir(DESTINATION_FOLDER)
 
     all_records = []
-    for record in records[:10]:
+    for record in records:
         print("processing record: {}".format(record["file"]))
         metadata = {
             "source_file": record["file"],
@@ -47,7 +48,7 @@ def process_entities(records, entities, storage_client):
     os.rmdir(DESTINATION_FOLDER)
 
 
-def filter_new_entity_data(entities, storage_client):
+def filter_new_entities(entities, storage_client):
     """
     it processes the history if the entity is not tracked.
     fetches all files within the corresponding dir - process
@@ -92,7 +93,7 @@ def filter_new_entity_data(entities, storage_client):
     process_entities(records, entities, storage_client)
 
 
-def process_existing_entities(entities, storage_client):
+def filter_existing_entities(entities, storage_client):
     """
     if the entity is tracked, we fetch and process the latest
     json based on date_to of the data. it's up to the company
@@ -104,6 +105,7 @@ def process_existing_entities(entities, storage_client):
 
     print("fetching new objects")
     for obj in entities:
+        print(obj.entity_legal_name)
         uid = obj.entity_id
         name = obj.entity_legal_name
 
@@ -169,7 +171,8 @@ def index_articles():
 
     print("new entires: {}".format(len(new_entities)))
     print("tracked entries: {}".format(len(old_entities)))
-    process_existing_entities(old_entities, storage_client)
+    filter_new_entities(new_entities, storage_client)
+    filter_existing_entities(old_entities, storage_client)
 
 
 if __name__ == "__main__":

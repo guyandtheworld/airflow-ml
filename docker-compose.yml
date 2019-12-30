@@ -37,6 +37,8 @@ services:
       retries: 3
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
+    env_file:
+      - config/db.env
 
   scheduler:
     build: .
@@ -54,3 +56,5 @@ services:
       retries: 3
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
+    env_file:
+      - config/db.env

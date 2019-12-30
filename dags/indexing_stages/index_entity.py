@@ -3,15 +3,15 @@ import datetime
 from google.cloud import storage
 from google.cloud.storage import Blob
 
-from data.mongo_setup import global_init
-from data.entity import EntityIndex
-from utils import create_company
+from indexing_stages.data.mongo_setup import global_init
+from indexing_stages.data.entity import EntityIndex
+from indexing_stages.utils import create_company
 
 
 BUCKET_NAME = "alrt-ai-ps"
 
 
-def index_company():
+def index_entities():
     """
     * indexes new companies on our database
     * keeps track of the last date we tracked our entity
