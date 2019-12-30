@@ -24,5 +24,5 @@ class Article(mongoengine.Document):
         required=False)  # cosine similarity detection
     meta = {
         'db_alias': 'core',
-        'collection': 'test_article_index'
+        'collection': 'prod_article_index'
     }

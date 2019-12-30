@@ -25,5 +25,5 @@ class EntityIndex(mongoengine.Document):
 
     meta = {
         'db_alias': 'core',
-        'collection': 'test_company_index'
+        'collection': 'prod_company_index'
     }
