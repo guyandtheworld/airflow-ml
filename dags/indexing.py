@@ -17,12 +17,13 @@ default_args = {
     'owner': 'alrtai',
     'start_date': dt.datetime(2019, 12, 30, 00, 00, 00),
     'concurrency': 1,
-    'retries': 3
+    'retries': 1
 }
 
 with DAG('indexing',
          default_args=default_args,
-         schedule_interval=timedelta(minutes=1),
+         schedule_interval=timedelta(hours=8),
+         catchup=False
          ) as dag:
 
     idx_entities = PythonOperator(task_id='index_entities',
