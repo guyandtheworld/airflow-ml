@@ -3,9 +3,9 @@ import datetime
 from google.cloud import storage
 from google.cloud.storage import Blob
 
-from indexing_stages.data.mongo_setup import global_init
-from indexing_stages.data.entity import EntityIndex
-from indexing_stages.utils import create_company
+from .data.mongo_setup import global_init
+from .data.entity import EntityIndex
+from .utils import create_company
 
 
 BUCKET_NAME = "alrt-ai-ps"
@@ -61,4 +61,4 @@ def index_entities():
 
 
 if __name__ == "__main__":
-    index_company()
+    index_entities()

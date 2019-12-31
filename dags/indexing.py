@@ -1,6 +1,7 @@
 import os
 import sys
 
+from pathlib import Path
 import datetime as dt
 
 from airflow import DAG
@@ -11,7 +12,8 @@ from datetime import timedelta
 from indexing_stages.index_article import index_articles
 from indexing_stages.index_entity import index_entities
 
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+path = Path(os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, path.parent)
 
 default_args = {
     'owner': 'alrtai',
@@ -22,7 +24,7 @@ default_args = {
 
 with DAG('indexing',
          default_args=default_args,
-         schedule_interval=timedelta(hours=8),
+         schedule_interval=timedelta(minutes=10),
          catchup=False
          ) as dag:
 

@@ -16,9 +16,9 @@ services:
   # initdb:
   #   build: .
   #   entrypoint: airflow initdb
-  #   # uncomment to connect to remote-postgres
-  #   # env_file:
-  #   #   - .env/postgres.env
+    # uncomment to connect to remote-postgres
+    # env_file:
+    #   - .env/postgres.env
 
   webserver:
     build: .
@@ -27,6 +27,7 @@ services:
       - postgres
     volumes:
       - ./dags:/usr/local/airflow/dags
+      - ./indexing_stages:/usr/local/airflow/indexing_stages
     ports:
       - "8080:8080"
     entrypoint: airflow webserver
@@ -48,6 +49,7 @@ services:
       - webserver
     volumes:
       - ./dags:/usr/local/airflow/dags
+      - ./indexing_stages:/usr/local/airflow/indexing_stages
     entrypoint: airflow scheduler
     healthcheck:
       test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-scheduler.pid ]"]
