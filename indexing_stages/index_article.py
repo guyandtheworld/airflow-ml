@@ -6,10 +6,9 @@ from datetime import datetime, timedelta
 from google.cloud import storage
 from google.cloud.storage import Blob
 
-from indexing_stages.data.entity import EntityIndex
-from indexing_stages.data.mongo_setup import global_init
-from indexing_stages.utils import process_company_json, write_article, \
-    update_entities
+from data.entity import EntityIndex
+from data.mongo_setup import global_init
+from utils import process_company_json, write_article, update_entities
 
 # should store sources in the database
 SOURCES = ["gdelt", "google_news"]
@@ -23,7 +22,7 @@ def process_entities(records, entities, storage_client):
     os.mkdir(DESTINATION_FOLDER)
 
     all_records = []
-    for record in records:
+    for record in records[:10]:
         print("processing record: {}".format(record["file"]))
         metadata = {
             "source_file": record["file"],
