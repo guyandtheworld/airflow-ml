@@ -15,6 +15,18 @@ Airflow needs persistent storage to store the details of all the executions and 
 
 When setting up airflow for the first time, we need to run the migrations which is in the docker-compose so that the tables can be setup.
 
+* Set the $AIRFLOW_HOME to the current file root
+* airflow.cfg shouldn't be copied
+* remove the default airflow.cfg while setting up locally
+
+
+### Testing Locally
+
+* `airflow webserver`
+* `airflow backfill indexing -s 2019-12-30`
+
+
+
 ### Migrations: Run only the first time for setting up tables
 
 `docker-compose up initdb` 
@@ -26,3 +38,4 @@ When setting up airflow for the first time, we need to run the migrations which 
 
 * [Configuring Airflow in docker-compose](https://medium.com/@xnuinside/quick-guide-how-to-run-apache-airflow-cluster-in-docker-compose-615eb8abd67a)
 * [Best Practices](https://gtoonstra.github.io/etl-with-airflow/principles.html)
+* [Config](https://github.com/kjam/data-pipelines-course/issues/1)
