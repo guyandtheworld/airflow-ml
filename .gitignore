@@ -132,3 +132,5 @@ dmypy.json
 .data
 config
 .vscode
+airflow.db
+logs

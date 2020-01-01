@@ -9,11 +9,13 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta
 
-from indexing_stages.index_article import index_articles
-from indexing_stages.index_entity import index_entities
 
-path = Path(os.path.abspath(os.path.dirname(__file__)))
-sys.path.insert(0, path.parent)
+path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
+sys.path.insert(0, "{}/indexing_stages".format(path.parent))  # noqa
+
+from index_article import index_articles
+from index_entity import index_entities
+
 
 default_args = {
     'owner': 'alrtai',
