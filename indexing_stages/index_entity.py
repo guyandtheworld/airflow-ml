@@ -8,7 +8,7 @@ from data.entity import EntityIndex
 from utils import create_company
 
 
-BUCKET_NAME = "alrt-ai-ps"
+BUCKET_NAME = "alrt-ai-ps-1"
 
 
 def index_entities():

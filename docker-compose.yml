@@ -28,18 +28,20 @@ services:
     volumes:
       - ./dags:/usr/local/airflow/dags
       - ./indexing_stages:/usr/local/airflow/indexing_stages
+      - ./config:/usr/local/airflow/config
     ports:
       - "8080:8080"
+      - "8793:8793"
     entrypoint: airflow webserver
     healthcheck:
       test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
       interval: 30s
       timeout: 30s
       retries: 3
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
     env_file:
       - config/db.env
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
 
   scheduler:
     build: .
@@ -50,13 +52,15 @@ services:
     volumes:
       - ./dags:/usr/local/airflow/dags
       - ./indexing_stages:/usr/local/airflow/indexing_stages
+      - ./config:/usr/local/airflow/config
     entrypoint: airflow scheduler
     healthcheck:
       test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-scheduler.pid ]"]
       interval: 30s
       timeout: 30s
       retries: 3
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
     env_file:
       - config/db.env
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
+

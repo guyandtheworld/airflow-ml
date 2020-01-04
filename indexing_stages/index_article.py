@@ -12,7 +12,7 @@ from utils import process_company_json, write_article, update_entities
 
 # should store sources in the database
 SOURCES = ["gdelt", "google_news"]
-BUCKET_NAME = "alrt-ai-ps"
+BUCKET_NAME = "alrt-ai-ps-1"
 DESTINATION_FOLDER = "temp"
 
 
@@ -76,7 +76,6 @@ def filter_new_entities(entities, storage_client):
                 # feels like this is a hack
                 dates = blob.name.split("/")[-1]
                 to_date = dates.strip(".json").split("Z-")[1]
-
                 record["file"] = blob.name
                 record["id"] = uid
                 record["name"] = name
