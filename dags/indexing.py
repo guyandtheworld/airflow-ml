@@ -19,7 +19,7 @@ from index_entity import index_entities
 default_args = {
     'owner': 'Airflow',
     'depends_on_past': False,
-    'start_date': datetime(2019, 12, 30),
+    'start_date': datetime(2020, 1, 3),
     'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,

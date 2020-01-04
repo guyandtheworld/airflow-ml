@@ -16,6 +16,7 @@ Airflow needs persistent storage to store the details of all the executions and 
 When setting up airflow for the first time, we need to run the migrations which is in the docker-compose so that the tables can be setup.
 
 * Set the $AIRFLOW_HOME to the current file root
+  `export AIRFLOW_HOME=$(pwd)`
 * airflow.cfg shouldn't be copied
 * remove the default airflow.cfg while setting up locally
 
@@ -26,6 +27,10 @@ When setting up airflow for the first time, we need to run the migrations which 
 * `airflow backfill indexing -s 2019-12-30`
 
 
+`airflow test indexing test_entities 2020-01-01`
+`airflow test indexing test_entities 2020-01-01`
+
+
 
 ### Migrations: Run only the first time for setting up tables
 
@@ -33,6 +38,10 @@ When setting up airflow for the first time, we need to run the migrations which 
 
 ### Running
 `docker-compose up --build`
+
+### Deployment
+* delete .data and run `docker-compose up --build postgres`
+* `docker-compose up --build initdb`
 
 ## References
 
