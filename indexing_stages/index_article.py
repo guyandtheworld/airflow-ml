@@ -8,7 +8,7 @@ from google.cloud.storage import Blob
 
 from data.entity import EntityIndex
 from data.mongo_setup import global_init
-from utils import process_company_json, write_article, update_entities
+from utils import process_company_json, write_article, update_entity
 
 # should store sources in the database
 SOURCES = ["gdelt", "google_news"]
@@ -21,29 +21,28 @@ def process_entities(records, entities, storage_client):
     bucket = storage_client.bucket(BUCKET_NAME)
     os.mkdir(DESTINATION_FOLDER)
 
-    all_records = []
     for record in records:
+        processed_records = []
         print("processing record: {}".format(record["file"]))
         metadata = {
             "source_file": record["file"],
             "entity_object": record["entity_object"]
         }
         processed_records = process_company_json(record, bucket, metadata)
-        all_records.extend(processed_records)
 
-    if len(all_records) > 0:
-        print("writing {} articles into db".format(len(all_records)))
-        resp = write_article(all_records)
-    else:
-        resp = {"status": "success",
-                "data": "no articles to insert"}
+        if len(processed_records) > 0:
+            print("writing {} articles, {} into db".format(
+                len(processed_records), record['name']))
+            resp = write_article(processed_records)
+        else:
+            resp = {"status": "success",
+                    "data": "no articles to insert"}
 
-    if resp["status"] == "success":
-        print("updating entity status")
-        update_entities(entities)
-        print(resp["data"])
-    else:
-        print("error: {}".format(resp["error"]))
+        if resp["status"] == "success":
+            resp = update_entity(record['entity_object'])
+            print(resp["data"])
+        else:
+            print("error: {}".format(resp["error"]))
     os.rmdir(DESTINATION_FOLDER)
 
 

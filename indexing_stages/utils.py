@@ -59,15 +59,14 @@ def write_article(records: List[Article]) -> dict:
     return resp
 
 
-def update_entities(entities: List[EntityIndex]) -> dict:
+def update_entity(entity: EntityIndex) -> dict:
     """
     update the entities in mongo db
     """
     try:
-        for obj in entities:
-            obj.save()
+        entity.save()
         resp = {"status": "success",
-                "data": "inserted {} articles into db".format(len(entities))
+                "data": "updated {}".format(entity["entity_legal_name"])
                 }
     except ConnectionError as e:
         resp = {"status": "error",

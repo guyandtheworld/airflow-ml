@@ -134,3 +134,5 @@ config
 .vscode
 airflow.db
 logs
+airflow.cfg
+unittests.cfg
