@@ -54,9 +54,18 @@ def google_news(data, metadata):
 
             # defines the language and the country
             # associated with each request
-            # params = region["search_params"]
-            # source_country = codes["country"][params["gl"]]
-            # language = codes["language"][params["gl"]]
+            params = region["search_params"]
+
+            if params["gl"] in codes["country"]:
+                source_country = codes["country"][params["gl"]]
+            else:
+                source_country = params["gl"]
+
+            if params["gl"] in codes["language"]:
+                language = codes["language"][params["gl"]]
+            else:
+                language = params["gl"]
+
             for article in region["item"]:
                 # generating a unique hash for our article url
                 hexdigest = hashlib.md5(article['link'].encode()).hexdigest()
@@ -73,8 +82,8 @@ def google_news(data, metadata):
                     internal_source="google_news",
                     domain=article["source"]["@url"],
                     description=article["description"],
-                    language="default",
-                    source_country="default",
+                    language=language,
+                    source_country=source_country,
                     raw_file_source=metadata["source_file"]
                 )
                 articles.append(article)

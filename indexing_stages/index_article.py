@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 
 from datetime import datetime, timedelta
 
@@ -153,6 +154,9 @@ def index_articles():
 
     print("loading storage client")
     storage_client = storage.Client()
+
+    if os.path.exists(DESTINATION_FOLDER):
+        shutil.rmtree(DESTINATION_FOLDER)
 
     try:
         objects = EntityIndex.objects().filter(actively_tracking=True)

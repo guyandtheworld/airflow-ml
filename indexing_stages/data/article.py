@@ -1,3 +1,4 @@
+import datetime
 import mongoengine
 
 
@@ -16,6 +17,7 @@ class Article(mongoengine.Document):
     description = mongoengine.StringField(required=False)
     internal_source = mongoengine.StringField(required=True)
     domain = mongoengine.URLField(required=True)
+    entry_created = mongoengine.DateTimeField(default=datetime.datetime.now)
     language = mongoengine.StringField(required=True)
     source_country = mongoengine.StringField(required=True)
     raw_file_source = mongoengine.StringField(
