@@ -42,6 +42,7 @@ When setting up airflow for the first time, we need to run the migrations which 
 ### Deployment
 * delete .data and run `docker-compose up --build postgres`
 * `docker-compose up --build initdb`
+* and no airflow.cfg and unittests
 
 ## References
 

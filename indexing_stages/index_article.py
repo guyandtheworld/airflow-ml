@@ -22,7 +22,7 @@ def process_entities(records, entities, storage_client):
     os.mkdir(DESTINATION_FOLDER)
 
     all_records = []
-    for record in records[:10]:
+    for record in records:
         print("processing record: {}".format(record["file"]))
         metadata = {
             "source_file": record["file"],
