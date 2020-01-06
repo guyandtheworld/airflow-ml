@@ -51,10 +51,18 @@ AIRFLOW__CORE__BASE_URL=http://{hostname}:8080
 AIRFLOW__WEBSERVER__RBAC=True
 ```
 
-`airflow create_user -r Admin -u adarsh -e adarsh@alrt.ai -f adarsh -l s -p alrtai2019`
+* Creating a New User
+
+    `airflow create_user -r Admin -u adarsh -e adarsh@alrt.ai -f adarsh -l s -p alrtai2019`
+
+* Configuring Fernet Key for Production
+
+    Fetch the Fernet key and update initdb to make it work properly (using docker exec)
+    `export FERNET_KEY = python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print(FERNET_KEY)"`
 
 ## References
 
 * [Configuring Airflow in docker-compose](https://medium.com/@xnuinside/quick-guide-how-to-run-apache-airflow-cluster-in-docker-compose-615eb8abd67a)
 * [Best Practices](https://gtoonstra.github.io/etl-with-airflow/principles.html)
 * [Config](https://github.com/kjam/data-pipelines-course/issues/1)
+* [Fernet Key and Stuff](https://medium.com/@itunpredictable/apache-airflow-on-docker-for-complete-beginners-cf76cf7b2c9a)

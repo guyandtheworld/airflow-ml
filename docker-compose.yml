@@ -16,6 +16,8 @@ services:
   initdb:
     build: .
     entrypoint: airflow initdb
+    # environment:
+    # - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
     # uncomment to connect to remote-postgres
     # env_file:
     #   - .env/postgres.env
