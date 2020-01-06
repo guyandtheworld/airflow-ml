@@ -13,9 +13,9 @@ services:
       - ./.data/postgres:/var/lib/postgresql/data
 
   # uncomment initdb if you need initdb at first run
-  # initdb:
-  #   build: .
-  #   entrypoint: airflow initdb
+  initdb:
+    build: .
+    entrypoint: airflow initdb
     # uncomment to connect to remote-postgres
     # env_file:
     #   - .env/postgres.env
@@ -31,7 +31,6 @@ services:
       - ./config:/usr/local/airflow/config
     ports:
       - "8080:8080"
-      - "8793:8793"
     entrypoint: airflow webserver
     healthcheck:
       test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
