@@ -28,7 +28,8 @@ default_args = {
 }
 
 dag = DAG(
-    'indexing', default_args=default_args, schedule_interval=timedelta(days=1))
+    'indexing', default_args=default_args, schedule_interval=timedelta(days=1),
+    catchup=False)
 
 idx_entities = PythonOperator(task_id='index_entities',
                               python_callable=index_entities, dag=dag)

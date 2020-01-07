@@ -13,7 +13,7 @@ from utils import process_company_json, write_article, update_entity
 
 # should store sources in the database
 SOURCES = ["gdelt", "google_news"]
-BUCKET_NAME = "alrt-ai-ps-1"
+BUCKET_NAME = "alrt-ai-ps-2"
 DESTINATION_FOLDER = "temp"
 
 
