@@ -54,7 +54,7 @@ def google_news(data, metadata):
 
             # defines the language and the country
             # associated with each request
-            params = region["search_params"]
+            params = region["search_param"]
 
             if params["gl"] in codes["country"]:
                 source_country = codes["country"][params["gl"]]
