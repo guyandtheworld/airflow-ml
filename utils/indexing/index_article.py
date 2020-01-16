@@ -9,7 +9,7 @@ from google.cloud.storage import Blob
 
 from data.entity import EntityIndex
 from data.mongo_setup import global_init
-from utils import process_company_json, write_article, update_entity
+from .utils import process_company_json, write_article, update_entity
 
 # should store sources in the database
 SOURCES = ["gdelt", "google_news"]

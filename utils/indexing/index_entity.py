@@ -5,7 +5,7 @@ from google.cloud.storage import Blob
 
 from data.mongo_setup import global_init
 from data.entity import EntityIndex
-from utils import create_company
+from .utils import create_company
 
 
 BUCKET_NAME = "alrt-ai-ps-2"
