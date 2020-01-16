@@ -2,6 +2,9 @@ import datetime
 import mongoengine
 
 
+from .title_analytics import TitleAnalytics
+
+
 class Article(mongoengine.Document):
     """
     This model will be used to index the articles in relation
@@ -20,6 +23,8 @@ class Article(mongoengine.Document):
     entry_created = mongoengine.DateTimeField(default=datetime.datetime.now)
     language = mongoengine.StringField(required=True)
     source_country = mongoengine.StringField(required=True)
+    title_analytics = mongoengine.EmbeddedDocumentField(
+        TitleAnalytics, required=False)
     raw_file_source = mongoengine.StringField(
         required=True)  # which file the article is in
     has_term_on_title = mongoengine.BooleanField(
