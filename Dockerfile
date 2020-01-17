@@ -11,4 +11,4 @@ COPY requirements.txt ./requirements.txt
 
 RUN pip install -r requirements.txt --user
 RUN touch __init__.py
-RUN python -m spacy download en_core_web_sm
+RUN python -m spacy download en_core_web_md

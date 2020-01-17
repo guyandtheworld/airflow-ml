@@ -1,4 +1,4 @@
-import en_core_web_sm
+import en_core_web_md
 
 from collections import defaultdict
 
@@ -7,7 +7,7 @@ from data.title_analytics import TitleAnalytics
 from data.body_analytics import BodyAnalytics
 from data.mongo_setup import global_init
 
-nlp = en_core_web_sm.load()
+nlp = en_core_web_md.load()
 
 # entity_types_to_save = ["PERSON", "NORP", "FACILITY", "ORG", "GPE"]
 
