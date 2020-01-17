@@ -3,6 +3,7 @@ import mongoengine
 
 
 from .title_analytics import TitleAnalytics
+from .body_analytics import BodyAnalytics
 
 
 class Article(mongoengine.Document):
@@ -25,6 +26,8 @@ class Article(mongoengine.Document):
     source_country = mongoengine.StringField(required=True)
     title_analytics = mongoengine.EmbeddedDocumentField(
         TitleAnalytics, required=False)
+    body_analytics = mongoengine.EmbeddedDocumentField(
+        BodyAnalytics, required=False)
     raw_file_source = mongoengine.StringField(
         required=True)  # which file the article is in
     has_term_on_title = mongoengine.BooleanField(

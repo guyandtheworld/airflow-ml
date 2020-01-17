@@ -13,7 +13,7 @@ def get_sentiment(text: str) -> dict:
     return sentiment
 
 
-def sentiment_analysis(*params):
+def sentiment_analysis(**params):
     """
     runs sentiment analysis on each article
     """

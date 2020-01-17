@@ -13,9 +13,9 @@ services:
       - ./.data/postgres:/var/lib/postgresql/data
 
   # uncomment initdb if you need initdb at first run
-  initdb:
-    build: .
-    entrypoint: airflow initdb
+  # initdb:
+  #   build: .
+  #   entrypoint: airflow initdb
     # environment:
     # - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
     # uncomment to connect to remote-postgres
@@ -29,7 +29,7 @@ services:
       - postgres
     volumes:
       - ./dags:/usr/local/airflow/dags
-      - ./indexing_stages:/usr/local/airflow/indexing_stages
+      - ./utils:/usr/local/airflow/utils
       - ./config:/usr/local/airflow/config
     ports:
       - "8080:8080"
@@ -52,7 +52,7 @@ services:
       - webserver
     volumes:
       - ./dags:/usr/local/airflow/dags
-      - ./indexing_stages:/usr/local/airflow/indexing_stages
+      - ./utils:/usr/local/airflow/utils
       - ./config:/usr/local/airflow/config
     entrypoint: airflow scheduler
     healthcheck:

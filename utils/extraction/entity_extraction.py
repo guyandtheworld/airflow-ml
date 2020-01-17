@@ -1,4 +1,4 @@
-import en_core_web_md
+import en_core_web_sm
 
 from collections import defaultdict
 
@@ -6,7 +6,7 @@ from data.article import Article
 from data.title_analytics import TitleAnalytics
 from data.mongo_setup import global_init
 
-nlp = en_core_web_md.load()
+nlp = en_core_web_sm.load()
 
 
 def named_entity_recognition(text: str) -> dict:
@@ -22,7 +22,7 @@ def named_entity_recognition(text: str) -> dict:
     return dict(dictionary)
 
 
-def extract_entities(*params):
+def extract_entities(**params):
     # setup connection to database
     global_init()
     try:
