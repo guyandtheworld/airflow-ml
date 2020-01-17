@@ -11,8 +11,8 @@ from datetime import timedelta, datetime
 path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
 sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
 
-from extraction.entity_extraction import extract_entities
-from extraction.sentiment import sentiment_analysis
+from extraction.entity_extraction import extract_entities_from_body
+from extraction.sentiment import sentiment_analysis_on_body
 from extraction.body_extraction import extract_body
 
 
@@ -36,20 +36,17 @@ dag = DAG(
 
 body_extraction = PythonOperator(task_id='body_extraction',
                                  python_callable=extract_body,
-                                 dag=dag,
-                                 params={"dag": "body_analytics"})
+                                 dag=dag)
 
 
 entity_extraction = PythonOperator(task_id='entity_extraction',
-                                   python_callable=extract_entities,
-                                   dag=dag,
-                                   params={"dag": "body_analytics"})
+                                   python_callable=extract_entities_from_body,
+                                   dag=dag)
 
 
 sentiment_analysis = PythonOperator(task_id='sentiment_analysis',
-                                    python_callable=sentiment_analysis,
-                                    dag=dag,
-                                    params={"dag": "body_analytics"})
+                                    python_callable=sentiment_analysis_on_body,
+                                    dag=dag)
 
 
 body_extraction >> entity_extraction >> sentiment_analysis
