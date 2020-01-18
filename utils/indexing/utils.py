@@ -22,7 +22,6 @@ def create_company(entities: dict) -> List[EntityIndex]:
         new_entity = EntityIndex(
             entity_id=entity["entity_id"],
             entity_legal_name=str(entity["entity_legal_name"]),
-            last_tracked=entity["last_tracked"],
             is_company=entity["is_company"])
         to_insert.append(new_entity)
 
@@ -50,6 +49,24 @@ def write_article(records: List[Article]) -> dict:
         resp = Article.objects().insert(records)
         resp = {"status": "success",
                 "data": "inserted {} articles into db".format(len(records))
+                }
+    except ConnectionError as e:
+        resp = {"status": "error",
+                "error": e}
+    except Exception as e:
+        resp = {"status": "error",
+                "error": e}
+    return resp
+
+
+def update_entity(entity: EntityIndex) -> dict:
+    """
+    update the entities in mongo db
+    """
+    try:
+        entity.save()
+        resp = {"status": "success",
+                "data": "updated {}".format(entity["entity_legal_name"])
                 }
     except ConnectionError as e:
         resp = {"status": "error",

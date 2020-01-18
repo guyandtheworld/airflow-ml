@@ -1,7 +1,13 @@
+apache-airflow==1.10.7
 colorama==0.4.3
+cryptography==2.8
+dragnet==2.0.4
+dnspython==1.16.0
 google-cloud-storage==1.23.0
 mongoengine===0.19.0
 psycopg2-binary==2.8.4
 pymongo==3.10.0
-python-dateutil
+python-dateutil==2.8.1
+spacy==2.2.3
 tqdm==4.41.0
+vaderSentiment==3.2.1

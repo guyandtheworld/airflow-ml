@@ -5,13 +5,13 @@ from google.cloud.storage import Blob
 
 from data.mongo_setup import global_init
 from data.entity import EntityIndex
-from utils import create_company
+from .utils import create_company
 
 
-BUCKET_NAME = "alrt-ai-ps"
+BUCKET_NAME = "alrt-ai-ps-2"
 
 
-def index_company():
+def index_entities():
     """
     * indexes new companies on our database
     * keeps track of the last date we tracked our entity
@@ -51,7 +51,6 @@ def index_company():
             obj = {
                 "entity_id": entity_id,
                 "entity_legal_name": entities_id_bucket[entity_id],
-                "last_tracked": datetime.datetime.now(),
                 "is_company": True
             }
             skeletons.append(obj)
@@ -62,4 +61,4 @@ def index_company():
 
 
 if __name__ == "__main__":
-    index_company()
+    index_entities()

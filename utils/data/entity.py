@@ -11,7 +11,7 @@ class EntityIndex(mongoengine.Document):
     """
     entity_id = mongoengine.IntField(required=True)
     entity_legal_name = mongoengine.StringField(required=True)
-    last_tracked = mongoengine.DateTimeField(required=True)
+    last_tracked = mongoengine.DateTimeField(default=None)
     is_company = mongoengine.BooleanField(default=True)
     actively_tracking = mongoengine.BooleanField(default=True)
     entity_tracking_init = mongoengine.DateTimeField(
@@ -25,5 +25,5 @@ class EntityIndex(mongoengine.Document):
 
     meta = {
         'db_alias': 'core',
-        'collection': 'test_company_index'
+        'collection': 'prod_company_index'
     }
