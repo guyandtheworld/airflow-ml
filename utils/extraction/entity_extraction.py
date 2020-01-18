@@ -44,7 +44,7 @@ def extract_entities_from_headlines():
 
     try:
         articles = Article.objects.filter(
-            title_analytics__exists=False)
+            title_analytics__exists=False)[:20000]
     except Exception as e:
         print(e)
         raise
@@ -72,7 +72,7 @@ def extract_entities_from_body():
 
     try:
         articles = Article.objects.filter(body__exists=True).filter(
-            body_analytics__exists=False)
+            body_analytics__exists=False)[:20000]
     except Exception as e:
         print(e)
         raise

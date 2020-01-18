@@ -30,7 +30,7 @@ default_args = {
 
 dag = DAG(
     'body_processing', default_args=default_args,
-    schedule_interval=timedelta(days=1),
+    schedule_interval=timedelta(hours=6),
     catchup=False)
 
 

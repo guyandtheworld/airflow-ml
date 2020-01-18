@@ -39,7 +39,7 @@ def extract_body():
     global_init()
     try:
         articles = Article.objects.filter(
-            body__exists=False)
+            body__exists=False)[:20000]
     except Exception as e:
         print(e)
         raise
