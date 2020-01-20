@@ -17,7 +17,7 @@ def warn(*args, **kwargs):
 
 
 out = []
-CONNECTIONS = 100
+CONNECTIONS = 50
 TIMEOUT = 5
 
 warnings.warn = warn
@@ -25,27 +25,39 @@ warnings.warn = warn
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+def do_request(url):
+    try:
+        requests.head(url, timeout=3)
+    except Exception:
+        return "", 404
+
+    try:
+        res = requests.get(url, verify=False, timeout=3)
+        content = extract_content(res.content)
+        return content, res.status_code
+    except Exception:
+        return "", 404
+
+
 def gen_text_dragnet(article, timeout):
-    r = requests.get(article.url, verify=False)
-    content = extract_content(r.content)
+    content, status_code = do_request(article.url)
     article.update(body=content[:500])
+    return status_code
 
 
 def extract_body():
     """
-    the problem probably is that we're running out of
-    memory. so we'll run this process once every 30 minutes
-    and only process about 2k articles
+    Processing broken URLs are a huge pain in the ass
     """
     global_init()
     try:
         articles = Article.objects.filter(
-            body__exists=False)[:500]
+            body__exists=False)[:2000]
     except Exception as e:
         print(e)
         raise
 
-    print("extracting entities from {} articles".format(len(articles)))
+    print("extracting bodies from {} articles".format(len(articles)))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=CONNECTIONS) as executor:
         future_to_url = (executor.submit(gen_text_dragnet, article, TIMEOUT)
