@@ -20,6 +20,7 @@ class Article(mongoengine.Document):
     published_date = mongoengine.DateTimeField()  # some cases - detected
     description = mongoengine.StringField(required=False)
     body = mongoengine.StringField(required=False)
+    status_code = mongoengine.IntField(required=False)
     internal_source = mongoengine.StringField(required=True)
     domain = mongoengine.URLField(required=True)
     entry_created = mongoengine.DateTimeField(default=datetime.datetime.now)
