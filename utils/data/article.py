@@ -4,6 +4,7 @@ import mongoengine
 
 from .title_analytics import TitleAnalytics
 from .body_analytics import BodyAnalytics
+from .bucket import Bucket
 
 
 class Article(mongoengine.Document):
@@ -20,6 +21,7 @@ class Article(mongoengine.Document):
     published_date = mongoengine.DateTimeField()  # some cases - detected
     description = mongoengine.StringField(required=False)
     body = mongoengine.StringField(required=False)
+    status_code = mongoengine.IntField(required=False)
     internal_source = mongoengine.StringField(required=True)
     domain = mongoengine.URLField(required=True)
     entry_created = mongoengine.DateTimeField(default=datetime.datetime.now)
@@ -29,6 +31,8 @@ class Article(mongoengine.Document):
         TitleAnalytics, required=False)
     body_analytics = mongoengine.EmbeddedDocumentField(
         BodyAnalytics, required=False)
+    buckets = mongoengine.EmbeddedDocumentListField(
+        Bucket, required=False)
     raw_file_source = mongoengine.StringField(
         required=True)  # which file the article is in
     has_term_on_title = mongoengine.BooleanField(

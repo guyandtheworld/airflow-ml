@@ -1,9 +1,11 @@
+import concurrent.futures
 import requests
+import time
 import urllib3
 import warnings
 
+import pandas as pd
 from dragnet import extract_content
-from threading import Thread
 
 from data.article import Article
 from data.title_analytics import TitleAnalytics
@@ -14,46 +16,63 @@ def warn(*args, **kwargs):
     pass
 
 
+out = []
+CONNECTIONS = 100
+TIMEOUT = 5
+
 warnings.warn = warn
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def gen_text_dragnet(*articles):
-    for article in articles:
-        print(article.url)
-        try:
-            r = requests.get(article.url, verify=False)
-            content = extract_content(r.content)
-        except ConnectionError as e:
-            print(e)
-            content = ""
-        except Exception as e:
-            print(e)
-            content = ""
-        # save only this much or we run out of mongo space
-        article.update(body=content[:500])
+def do_request(url):
+    try:
+        requests.head(url, timeout=5)
+    except Exception:
+        return "", 404
+
+    try:
+        res = requests.get(url, verify=False, timeout=5)
+        content = extract_content(res.content)
+        return content, res.status_code
+    except Exception:
+        return "", 404
+
+
+def gen_text_dragnet(article, timeout):
+    content, status_code = do_request(article.url)
+    article.update(body=content[:500], status_code=status_code)
+    return status_code
 
 
 def extract_body():
+    """
+    Processing broken URLs are a huge pain in the ass
+    """
     global_init()
     try:
         articles = Article.objects.filter(
-            body__exists=False)
+            status_code__exists=False)[:5000]
     except Exception as e:
         print(e)
         raise
 
-    for i in range(0, len(articles), 100):
-        print("processed: {}".format(i))
-        threads = []
+    print("extracting bodies from {} articles".format(len(articles)))
 
-        for slide in range(i, i+100, 10):
-            # create 2 threads with 10 requests each
-            process = Thread(target=gen_text_dragnet,
-                             args=articles[slide:slide+10])
-            process.start()
-            threads.append(process)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=CONNECTIONS) as executor:
+        future_to_url = (executor.submit(gen_text_dragnet, article, TIMEOUT)
+                         for article in articles)
+        time1 = time.time()
+        for future in concurrent.futures.as_completed(future_to_url):
+            try:
+                data = future.result()
+            except Exception as exc:
+                data = str(type(exc))
+            finally:
+                out.append(data)
+                print(str(len(out)), end="\r")
 
-        for process in threads:
-            process.join()
+        time2 = time.time()
+
+    print(f'Took {time2-time1:.2f} s')
+    print(pd.Series(out).value_counts())

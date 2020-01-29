@@ -2,7 +2,7 @@ version: "3"
 services:
   postgres:
     image: "postgres:9.6"
-    container_name: "postgres"
+    container_name: postgres
     environment:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
@@ -15,12 +15,14 @@ services:
   # uncomment initdb if you need initdb at first run
   # initdb:
   #   build: .
+  #   depends_on:
+  #     - postgres
   #   entrypoint: airflow initdb
     # environment:
     # - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
     # uncomment to connect to remote-postgres
     # env_file:
-    #   - .env/postgres.env
+    #   - config/db.env
 
   webserver:
     build: .

@@ -137,3 +137,4 @@ logs
 airflow.cfg
 unittests.cfg
 en_core_web_sm
+utils/model/helpers
