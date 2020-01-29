@@ -12,7 +12,11 @@ path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
 sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
 
 from model.risk_classification import load_model_utils, load_data, \
-    preprocess_data, make_prediction, log_metrics
+    predict_scores, log_metrics
+
+from data.mongo_setup import global_init
+
+global_init()
 
 
 default_args = {
@@ -33,26 +37,21 @@ dag = DAG(
     catchup=False)
 
 
-load_data = PythonOperator(task_id='load_data',
-                           python_callable=load_data,
-                           dag=dag)
-
 load_model_utils = PythonOperator(task_id='load_model_utils',
                                   python_callable=load_model_utils,
                                   dag=dag)
 
-preprocess_data = PythonOperator(task_id='preprocess_data',
-                                 python_callable=preprocess_data,
-                                 dag=dag)
+load_data = PythonOperator(task_id='load_data',
+                           python_callable=load_data,
+                           dag=dag)
 
-make_prediction = PythonOperator(task_id='make_prediction',
-                                 python_callable=make_prediction,
-                                 dag=dag)
+predict_scores = PythonOperator(task_id='predict_scores',
+                                python_callable=predict_scores,
+                                dag=dag)
 
 log_metrics = PythonOperator(task_id='log_metrics',
                              python_callable=log_metrics,
                              dag=dag)
 
 
-load_data >> preprocess_data >> make_prediction >> log_metrics
-load_model_utils >> make_prediction
+load_model_utils >> load_data >> predict_scores >> log_metrics

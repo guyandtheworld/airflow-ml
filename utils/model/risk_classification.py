@@ -3,16 +3,14 @@ import os
 import urllib
 import urllib.request
 
-from google.cloud import storage
-from google.cloud.storage import Blob
+import pandas as pd
 
-from tensorflow.keras.layers import Dense, LSTM, SpatialDropout1D, Embedding
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.initializers import Constant
+from google.cloud import storage
+from data.article import Article
+from data.mongo_setup import global_init
 from tensorflow.keras.models import load_model
 
+from .utils import make_prediction
 
 os.chdir(os.path.dirname(__file__))
 path = os.getcwd()
@@ -73,27 +71,53 @@ def load_model_utils():
 
 def load_data():
     """
-    load_data
+    load data
     """
-    pass
+    try:
+        # fetch articles which we haven't scored yet
+        pipeline = [{"$match": {"buckets": {"$ne": "null"}}},
+                    {"$limit": 50},
+                    {"$project": {
+                        "title": 1,
+                        "published_date": 1}
+                     }]
+        articles = Article.objects.aggregate(*pipeline)
+    except Exception as e:
+        print(e)
+        return
+
+    df = pd.DataFrame(list(articles))
+    print("writing {} articles for preprocessing".format(df.shape[0]))
+    df.to_csv("{}/articles.csv".format(HELPER_DIRECTORY), index=False)
 
 
-def preprocess_data():
+def predict_scores():
     """
-    preprocess_data
+    loads model locally and makes prediction
     """
-    pass
+    # fetch latest model name from db and load it
+    try:
+        df = pd.read_csv("{}/articles.csv".format(HELPER_DIRECTORY))
+    except FileNotFoundError as e:
+        print("article.csv doesn't exist")
+        return
 
+    print("making prediction on {} items".format(df.shape[0]))
+    model = load_model("{}/risk_model_v1.h5".format(HELPER_DIRECTORY))
 
-def make_prediction():
-    """
-    make_prediction
-    """
-    pass
+    df['predictions'] = df['title'].apply(lambda x: make_prediction(model, x))
+    print("writing {} articles for logging".format(df.shape[0]))
+    df.to_csv("{}/results.csv".format(HELPER_DIRECTORY), index=False)
+    os.remove("{}/articles.csv".format(HELPER_DIRECTORY))
 
 
 def log_metrics():
     """
-    log_metrics
+    * connect predictions to bucket
+    * fetch UUIDs and connect to prediction
     """
-    pass
+    try:
+        df = pd.read_csv("{}/results.csv".format(HELPER_DIRECTORY))
+    except FileNotFoundError as e:
+        print("results.csv doesn't exist")
+        return

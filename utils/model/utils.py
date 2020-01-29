@@ -11,10 +11,15 @@ MAX_LEN = 100
 BUCKET = "production_models"
 
 
-def padding(corpus, train=True):
-    with open('tokenizer.pickle', 'rb') as tok:
-        tokenizer = pickle.load(tok)
+os.chdir(os.path.dirname(__file__))
+path = os.getcwd()
+HELPER_DIRECTORY = "{}/{}".format(path, "helpers")
 
+
+def padding(corpus, train=True):
+    path = "{}/{}".format(HELPER_DIRECTORY, "tokenizer.pickle")
+    with open(path, 'rb') as tok:
+        tokenizer = pickle.load(tok)
     sequences = tokenizer.texts_to_sequences(corpus)
     news_pad = pad_sequences(sequences, maxlen=MAX_LEN)
     word_index = None
@@ -53,4 +58,13 @@ def upload_version_model(model=False):
     upload_ml_stuff_to_bucket(blob_name, path)
 
 
-upload_version_model()
+def make_prediction(model, test: str):
+    if isinstance(test, str):
+        test = padding(list([test]), False)[0]
+        y_pre = model.predict(test)[0]
+        result_dict = {'financial_risk': y_pre[0],
+                       'cyber_crime': y_pre[1], 'other': y_pre[2]}
+        return result_dict
+    else:
+        return {'financial_risk': 0,
+                'cyber_crime': 0, 'other': 1}
