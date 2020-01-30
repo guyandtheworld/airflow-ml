@@ -22,7 +22,7 @@ services:
     # - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
     # uncomment to connect to remote-postgres
     # env_file:
-    #   - config/db.env
+    #   - .config/db.env
 
   webserver:
     build: .
@@ -32,7 +32,7 @@ services:
     volumes:
       - ./dags:/usr/local/airflow/dags
       - ./utils:/usr/local/airflow/utils
-      - ./config:/usr/local/airflow/config
+      - ./.config:/usr/local/airflow/.config
     ports:
       - "8080:8080"
     entrypoint: airflow webserver
@@ -42,9 +42,9 @@ services:
       timeout: 30s
       retries: 3
     env_file:
-      - config/db.env
+      - .config/db.env
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
+      - GOOGLE_APPLICATION_CREDENTIALS=.config/google_cloud_key.json
 
   scheduler:
     build: .
@@ -55,7 +55,7 @@ services:
     volumes:
       - ./dags:/usr/local/airflow/dags
       - ./utils:/usr/local/airflow/utils
-      - ./config:/usr/local/airflow/config
+      - ./.config:/usr/local/airflow/.config
     entrypoint: airflow scheduler
     healthcheck:
       test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-scheduler.pid ]"]
@@ -63,7 +63,7 @@ services:
       timeout: 30s
       retries: 3
     env_file:
-      - config/db.env
+      - .config/db.env
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
+      - GOOGLE_APPLICATION_CREDENTIALS=.config/google_cloud_key.json
 
