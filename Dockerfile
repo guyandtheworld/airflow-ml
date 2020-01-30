@@ -1,4 +1,4 @@
-FROM puckel/docker-airflow:1.10.6-1
+FROM puckel/docker-airflow:1.10.7
 ENV AIRFLOW_HOME=/usr/local/airflow
 
 USER root
@@ -12,8 +12,10 @@ COPY requirements.txt ./requirements.txt
 
 RUN pip install -r requirements.txt --user
 RUN touch __init__.py
-# RUN python -m spacy download en_core_web_sm
-# RUN pip install --upgrade pip
+
+ENV AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+ENV AIRFLOW__CORE__LOAD_EXAMPLES=False
+
 RUN wget https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz
 RUN pip install --user en_core_web_sm-2.2.0.tar.gz
 RUN rm en_core_web_sm-2.2.0.tar.gz
