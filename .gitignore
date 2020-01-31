@@ -130,7 +130,7 @@ dmypy.json
 
 # development postgres migrations
 .data
-.config
+.keys
 .vscode
 airflow.db
 logs

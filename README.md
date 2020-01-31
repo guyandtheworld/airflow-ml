@@ -40,16 +40,19 @@ When setting up airflow for the first time, we need to run the migrations which 
 
 * delete .data and run `docker-compose up --build postgres`
 * `docker-compose up --build initdb`
-* and no airflow.cfg and unittests
-
+* and no airflow.cfg and unittest
 * User Auth
 
 ```
 AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
 AIRFLOW__CORE__LOAD_EXAMPLES=False
-AIRFLOW__CORE__BASE_URL=http://{hostname}:8080
 AIRFLOW__WEBSERVER__RBAC=True
 ```
+
+* If you fuck up db
+
+    - `airflow resetdb`
+    - `docker exec -it docker-airflow_scheduler_1 /entrypoint.sh bash`
 
 * Creating a New User
 
