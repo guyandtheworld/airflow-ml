@@ -12,8 +12,8 @@ services:
             - POSTGRES_DB=airflow
         # Uncomment these lines to persist data on the local filesystem.
         #     - PGDATA=/var/lib/postgresql/data/pgdata
-        # volumes:
-        #     - ./pgdata:/var/lib/postgresql/data/pgdata
+        volumes:
+            - ./.pgdata:/var/lib/postgresql/data/pgdata
 
     webserver:
         build: .
@@ -25,6 +25,7 @@ services:
             - LOAD_EX=n
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
             - EXECUTOR=Celery
+            - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
             # - POSTGRES_USER=airflow
             # - POSTGRES_PASSWORD=airflow
             # - POSTGRES_DB=airflow
@@ -39,6 +40,8 @@ services:
             interval: 30s
             timeout: 30s
             retries: 3
+        env_file:
+          - .keys/mongo.env
 
     flower:
         build: .
@@ -47,6 +50,7 @@ services:
             - redis
         environment:
             - EXECUTOR=Celery
+            - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
             # - REDIS_PASSWORD=redispass
         ports:
             - "5555:5555"
@@ -62,12 +66,15 @@ services:
         environment:
             - LOAD_EX=n
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
             - EXECUTOR=Celery
             # - POSTGRES_USER=airflow
             # - POSTGRES_PASSWORD=airflow
             # - POSTGRES_DB=airflow
             # - REDIS_PASSWORD=redispass
         command: scheduler
+        env_file:
+          - .keys/mongo.env
 
     worker:
         build: .
@@ -78,9 +85,12 @@ services:
             - ./dags:/usr/local/airflow/dags
         environment:
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
             - EXECUTOR=Celery
             # - POSTGRES_USER=airflow
             # - POSTGRES_PASSWORD=airflow
             # - POSTGRES_DB=airflow
             # - REDIS_PASSWORD=redispass
         command: worker
+        env_file:
+          - .keys/mongo.env

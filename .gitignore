@@ -129,9 +129,9 @@ dmypy.json
 .pyre/
 
 # development postgres migrations
-.data
 .keys
 .vscode
+.pgata
 logs
 en_core_web_sm
 utils/model/helpers
