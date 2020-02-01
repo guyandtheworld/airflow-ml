@@ -17,22 +17,25 @@ def warn(*args, **kwargs):
 
 
 out = []
-CONNECTIONS = 100
+CONNECTIONS = 500
 TIMEOUT = 5
 
 warnings.warn = warn
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) \
+           AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+
 
 def do_request(url):
     try:
-        requests.head(url, timeout=5)
+        requests.head(url, verify=False, timeout=10, headers=headers)
     except Exception:
         return "", 404
 
     try:
-        res = requests.get(url, verify=False, timeout=5)
+        res = requests.get(url, verify=False, timeout=10, headers=headers)
         content = extract_content(res.content)
         return content, res.status_code
     except Exception:
@@ -40,7 +43,7 @@ def do_request(url):
 
 
 def gen_text_dragnet(article, timeout):
-    content, status_code = do_request(article.url)
+    content, status_code = do_request(article["url"])
     article.update(body=content[:500], status_code=status_code)
     return status_code
 
