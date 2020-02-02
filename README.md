@@ -52,7 +52,7 @@ AIRFLOW__WEBSERVER__RBAC=True
 * If you fuck up db
 
     - `airflow resetdb`
-    - `docker exec -it docker-airflow_scheduler_1 /entrypoint.sh bash`
+    - `docker exec -it rey_scheduler_1 /entrypoint.sh bash`
 
 * Creating a New User
 
