@@ -63,6 +63,13 @@ AIRFLOW__WEBSERVER__RBAC=True
     Fetch the Fernet key and update initdb to make it work properly (using docker exec)
     `export FERNET_KEY = python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print(FERNET_KEY)"`
 
+## Distributing Workers
+
+
+MetaStore: `postgresql+psycopg2://airflow:airflow@postgres:5432/airflow`
+BrokerURL: `redis://redis:6379/1`
+
+
 ## References
 
 * [Configuring Airflow in docker-compose](https://medium.com/@xnuinside/quick-guide-how-to-run-apache-airflow-cluster-in-docker-compose-615eb8abd67a)

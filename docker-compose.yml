@@ -3,6 +3,8 @@ services:
     redis:
         image: 'redis:5.0.5'
         # command: redis-server --requirepass redispass
+        ports:
+            - "6379:6379"
 
     postgres:
         image: postgres:9.6
@@ -13,6 +15,8 @@ services:
             - PGDATA=/var/lib/postgresql/data/pgdata
         volumes:
             - ./.pgdata:/var/lib/postgresql/data/pgdata
+        ports:
+            - "5432:5432"
 
     webserver:
         build: .
