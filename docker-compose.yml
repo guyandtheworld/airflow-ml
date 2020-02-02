@@ -90,6 +90,8 @@ services:
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
             - GOOGLE_APPLICATION_CREDENTIALS=.keys/google_cloud_key.json
             - EXECUTOR=Celery
+            # - POSTGRES_HOST=35.246.27.83
+            # - REDIS_HOST=35.246.27.83
             # - POSTGRES_USER=airflow
             # - POSTGRES_PASSWORD=airflow
             # - POSTGRES_DB=airflow

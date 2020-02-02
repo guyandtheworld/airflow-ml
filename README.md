@@ -65,9 +65,11 @@ AIRFLOW__WEBSERVER__RBAC=True
 
 ## Distributing Workers
 
-
 MetaStore: `postgresql+psycopg2://airflow:airflow@postgres:5432/airflow`
 BrokerURL: `redis://redis:6379/1`
+
+For running workers on different nodes, connect to the metastore db and the redis queue by configuring
+the docker-compose with `POSTGRES_HOST` and `REDIS_HOST`. Also remove the dependency to the local scheduler
 
 
 ## References
