@@ -28,7 +28,7 @@ services:
             - LOAD_EX=n
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
             - EXECUTOR=Celery
-            - GOOGLE_APPLICATION_CREDENTIALS=.keys/google_cloud_key.json
+            - GOOGLE_APPLICATION_CREDENTIALS=.keys/gcp_pubsub_storage.json
             # - POSTGRES_USER=airflow
             # - POSTGRES_PASSWORD=airflow
             # - POSTGRES_DB=airflow
@@ -53,7 +53,7 @@ services:
             - redis
         environment:
             - EXECUTOR=Celery
-            - GOOGLE_APPLICATION_CREDENTIALS=.keys/google_cloud_key.json
+            - GOOGLE_APPLICATION_CREDENTIALS=.keys/gcp_pubsub_storage.json
             # - REDIS_PASSWORD=redispass
         ports:
             - "5555:5555"
@@ -69,7 +69,7 @@ services:
         environment:
             - LOAD_EX=n
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
-            - GOOGLE_APPLICATION_CREDENTIALS=.keys/google_cloud_key.json
+            - GOOGLE_APPLICATION_CREDENTIALS=.keys/gcp_pubsub_storage.json
             - EXECUTOR=Celery
             # - POSTGRES_USER=airflow
             # - POSTGRES_PASSWORD=airflow
@@ -88,7 +88,7 @@ services:
             - ./dags:/usr/local/airflow/dags
         environment:
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
-            - GOOGLE_APPLICATION_CREDENTIALS=.keys/google_cloud_key.json
+            - GOOGLE_APPLICATION_CREDENTIALS=.keys/gcp_pubsub_storage.json
             - EXECUTOR=Celery
             # - POSTGRES_HOST=35.246.27.83
             # - REDIS_HOST=35.246.27.83

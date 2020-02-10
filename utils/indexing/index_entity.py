@@ -1,3 +1,4 @@
+import os
 import datetime
 
 from google.cloud import storage
@@ -8,7 +9,7 @@ from data.entity import EntityIndex
 from .utils import create_company
 
 
-BUCKET_NAME = "alrt-ai-ps-2"
+BUCKET_NAME = os.getenv("BUCKET_NAME", "alrtai-testing-bucket")
 
 
 def index_entities():
