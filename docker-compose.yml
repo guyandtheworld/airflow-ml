@@ -1,69 +1,101 @@
-version: "3"
+version: '2.1'
 services:
-  postgres:
-    image: "postgres:9.6"
-    container_name: postgres
-    environment:
-      - POSTGRES_USER=airflow
-      - POSTGRES_PASSWORD=airflow
-      - POSTGRES_DB=airflow
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./.data/postgres:/var/lib/postgresql/data
+    redis:
+        image: 'redis:5.0.5'
+        # command: redis-server --requirepass redispass
+        ports:
+            - "6379:6379"
 
-  # uncomment initdb if you need initdb at first run
-  # initdb:
-  #   build: .
-  #   depends_on:
-  #     - postgres
-  #   entrypoint: airflow initdb
-    # environment:
-    # - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
-    # uncomment to connect to remote-postgres
-    # env_file:
-    #   - config/db.env
+    postgres:
+        image: postgres:9.6
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+            - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+            - ./.pgdata:/var/lib/postgresql/data/pgdata
+        ports:
+            - "5432:5432"
 
-  webserver:
-    build: .
-    restart: always
-    depends_on:
-      - postgres
-    volumes:
-      - ./dags:/usr/local/airflow/dags
-      - ./utils:/usr/local/airflow/utils
-      - ./config:/usr/local/airflow/config
-    ports:
-      - "8080:8080"
-    entrypoint: airflow webserver
-    healthcheck:
-      test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
-    env_file:
-      - config/db.env
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
+    webserver:
+        build: .
+        restart: always
+        depends_on:
+            - postgres
+            - redis
+        environment:
+            - LOAD_EX=n
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - EXECUTOR=Celery
+            - GOOGLE_APPLICATION_CREDENTIALS=.keys/gcp_pubsub_storage.json
+            # - POSTGRES_USER=airflow
+            # - POSTGRES_PASSWORD=airflow
+            # - POSTGRES_DB=airflow
+            # - REDIS_PASSWORD=redispass
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+        ports:
+            - "8080:8080"
+        command: webserver
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
+        env_file:
+          - .keys/mongo.env
 
-  scheduler:
-    build: .
-    restart: always
-    depends_on:
-      - postgres
-      - webserver
-    volumes:
-      - ./dags:/usr/local/airflow/dags
-      - ./utils:/usr/local/airflow/utils
-      - ./config:/usr/local/airflow/config
-    entrypoint: airflow scheduler
-    healthcheck:
-      test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-scheduler.pid ]"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
-    env_file:
-      - config/db.env
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=config/google_cloud_key.json
+    flower:
+        build: .
+        restart: always
+        depends_on:
+            - redis
+        environment:
+            - EXECUTOR=Celery
+            - GOOGLE_APPLICATION_CREDENTIALS=.keys/gcp_pubsub_storage.json
+            # - REDIS_PASSWORD=redispass
+        ports:
+            - "5555:5555"
+        command: flower
 
+    scheduler:
+        build: .
+        restart: always
+        depends_on:
+            - webserver
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+        environment:
+            - LOAD_EX=n
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - GOOGLE_APPLICATION_CREDENTIALS=.keys/gcp_pubsub_storage.json
+            - EXECUTOR=Celery
+            # - POSTGRES_USER=airflow
+            # - POSTGRES_PASSWORD=airflow
+            # - POSTGRES_DB=airflow
+            # - REDIS_PASSWORD=redispass
+        command: scheduler
+        env_file:
+          - .keys/mongo.env
+
+    worker:
+        build: .
+        restart: always
+        depends_on:
+            - scheduler
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+        environment:
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - GOOGLE_APPLICATION_CREDENTIALS=.keys/gcp_pubsub_storage.json
+            - EXECUTOR=Celery
+            # - POSTGRES_HOST=35.246.27.83
+            # - REDIS_HOST=35.246.27.83
+            # - POSTGRES_USER=airflow
+            # - POSTGRES_PASSWORD=airflow
+            # - POSTGRES_DB=airflow
+            # - REDIS_PASSWORD=redispass
+        command: worker
+        env_file:
+          - .keys/mongo.env

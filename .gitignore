@@ -129,12 +129,9 @@ dmypy.json
 .pyre/
 
 # development postgres migrations
-.data
-config
+.keys
 .vscode
-airflow.db
+.pgata
 logs
-airflow.cfg
-unittests.cfg
 en_core_web_sm
 utils/model/helpers
