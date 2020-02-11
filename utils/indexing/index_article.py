@@ -13,7 +13,7 @@ from .utils import process_company_json, write_article, update_entity
 
 # should store sources in the database
 SOURCES = ["gdelt", "google_news"]
-BUCKET_NAME = "alrt-ai-ps-2"
+BUCKET_NAME = os.getenv("BUCKET_NAME", "alrtai-testing-bucket")
 DESTINATION_FOLDER = "temp"
 
 
@@ -131,9 +131,13 @@ def filter_existing_entities(entities, storage_client):
                     record["entity_object"] = obj
                     records.append(record)
 
-        to_date = datetime.strptime(to_date, "%Y-%m-%dT%H:%M:%SZ")
-        if to_date > obj.last_tracked:
-            obj.last_tracked = to_date
+        # exception raised when there are tracking changes
+        try:
+            to_date = datetime.strptime(to_date, "%Y-%m-%dT%H:%M:%SZ")
+            if to_date > obj.last_tracked:
+                obj.last_tracked = to_date
+        except Exception:
+            print("tracking date conflict")
 
     process_entities(records, entities, storage_client)
 

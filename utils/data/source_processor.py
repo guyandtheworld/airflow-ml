@@ -43,48 +43,27 @@ def google_news(data, metadata):
     format for converting google news data
     into our model
     """
-    cwd = os.path.dirname(__file__)
-    with open("{}/codes.json".format(cwd), "r") as r:
-        codes = json.load(r)
-
-    date_format = "%a, %d %b %Y %H:%M:%S %Z"
+    date_format = "%Y-%m-%d %H:%M:%S"
     articles = []
     for key in data.keys():
-        for region in data[key]:
+        for article in data[key]:
+            hexdigest = hashlib.md5(article['url'].encode()).hexdigest()
+            normalized_d = datetime.strptime(
+                article["pubDate"], date_format)
 
-            # defines the language and the country
-            # associated with each request
-            params = region["search_param"]
-
-            if params["gl"] in codes["country"]:
-                source_country = codes["country"][params["gl"]]
-            else:
-                source_country = params["gl"]
-
-            if params["gl"] in codes["language"]:
-                language = codes["language"][params["gl"]]
-            else:
-                language = params["gl"]
-
-            for article in region["item"]:
-                # generating a unique hash for our article url
-                hexdigest = hashlib.md5(article['link'].encode()).hexdigest()
-                normalized_d = datetime.strptime(
-                    article["pubDate"], date_format)
-
-                article = Article(
-                    entity_id=metadata["entity_object"].id,
-                    title=article["title"],
-                    unique_hash=hexdigest,
-                    url=article["link"],
-                    search_keyword=key,
-                    published_date=normalized_d,
-                    internal_source="google_news",
-                    domain=article["source"]["@url"],
-                    description=article["description"],
-                    language=language,
-                    source_country=source_country,
-                    raw_file_source=metadata["source_file"]
-                )
-                articles.append(article)
+            article = Article(
+                entity_id=metadata["entity_object"].id,
+                title=article["title"],
+                unique_hash=hexdigest,
+                url=article["url"],
+                search_keyword=key,
+                published_date=normalized_d,
+                internal_source="google_news",
+                domain=article["source"],
+                description=article["description"],
+                language=article["language"],
+                source_country=article["country"],
+                raw_file_source=metadata["source_file"]
+            )
+            articles.append(article)
     return articles
