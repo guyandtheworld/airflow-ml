@@ -42,7 +42,7 @@ When setting up airflow for the first time, we need to run the migrations which 
 * `docker-compose up --build initdb`
 * and no airflow.cfg and unittest
 * User Auth
-
+* Disable auto-start `docker update --restart=no rey_worker_1 rey_scheduler_1 rey_webserver_1 rey_flower_1 rey_redis_1 rey_postgres_1`
 ```
 AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
 AIRFLOW__CORE__LOAD_EXAMPLES=False
