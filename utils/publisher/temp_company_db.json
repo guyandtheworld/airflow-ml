@@ -1,0 +1,56 @@
+[
+    {
+        "entity_id": "1",
+        "entity_legal_name": "Refineria di Korsou N.V Ltd",
+        "common_names": [
+            "Refineria di Korsou"
+        ],
+        "actively_tracking": true,
+        "history_processed": false,
+        "scenario_tracking_days": 730
+    },
+    {
+        "entity_id": "2",
+        "entity_legal_name": "Petróleos de Venezuela, S.A.",
+        "common_names": [
+            "PDVSA",
+            "Petróleos de Venezuela",
+            "Petroleos de Venezuela"
+        ],
+        "actively_tracking": true,
+        "history_processed": false,
+        "scenario_tracking_days": 730
+    },
+    {
+        "entity_id": "3",
+        "entity_legal_name": "Klesch Group Ltd",
+        "common_names": [
+            "Klesch"
+        ],
+        "actively_tracking": true,
+        "history_processed": false,
+        "scenario_tracking_days": 730
+    },
+    {
+        "entity_id": "4",
+        "entity_legal_name": "China National Petroleum Corporation",
+        "common_names": [
+            "CNPC",
+            "China National Petroleum"
+        ],
+        "actively_tracking": true,
+        "history_processed": false,
+        "scenario_tracking_days": 730
+    },
+    {
+        "entity_id": "5",
+        "entity_legal_name": "PJSC Rosneft Oil Company",
+        "common_names": [
+            "Rosneft"
+        ],
+        "is_company": true,
+        "actively_tracking": true,
+        "history_processed": false,
+        "scenario_tracking_days": 730
+    }
+]
