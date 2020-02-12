@@ -35,6 +35,7 @@ def publish_gdelt():
         params["common_names"] = company["common_names"]
         params["source"] = [SOURCE]
         params["storage_bucket"] = BUCKET_NAME
+        params["history_processed"] = company["gdelt_history_processed"]
 
         if not company["gdelt_history_processed"]:
             # date from

@@ -59,7 +59,8 @@ def publish(params):
         "source": json.dumps(params["source"]),
         "date_from": params["date_from"],
         "date_to": params["date_to"],
-        "storage_bucket": params["storage_bucket"]
+        "storage_bucket": params["storage_bucket"],
+        "history_processed": json.dumps(params["history_processed"])
     }
 
     api_future = client.publish(topic_path, data=data, **params)

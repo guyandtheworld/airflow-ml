@@ -35,6 +35,7 @@ def publish_google_news():
         params["common_names"] = company["common_names"]
         params["source"] = [SOURCE]
         params["storage_bucket"] = BUCKET_NAME
+        params["history_processed"] = company["google_news_history_processed"]
 
         if not company["google_news_history_processed"]:
             # date from
