@@ -40,24 +40,24 @@ def get_callback(api_future, data, ref):
     return callback
 
 
-def publish(**kwargs):
+def publish(params):
     """
     Publishes a message to a Pub/Sub topic.
     """
     client = pubsub_v1.PublisherClient()
     topic_path = client.topic_path(PROJECT_ID, TOPIC_ID)
 
-    data = "{}".format(kwargs["path"]).encode("utf-8")
+    data = "{}".format("scraping packet").encode("utf-8")
     ref = dict({"num_messages": 0})
 
     params = {
-        "id": str(kwargs["entity_id"]),
-        "company_name": kwargs["entity_id"],
-        "common_names": json.dumps(kwargs["common_names"]),
-        "source": json.dumps(kwargs["source"]),
-        "date_from": kwargs["date_from"],
-        "date_to": kwargs["date_to"],
-        "storage_bucket": kwargs["bucket"]
+        "id": str(params["id"]),
+        "company_name": params["company_name"],
+        "common_names": json.dumps(params["common_names"]),
+        "source": json.dumps(params["source"]),
+        "date_from": params["date_from"],
+        "date_to": params["date_to"],
+        "storage_bucket": params["storage_bucket"]
     }
 
     api_future = client.publish(topic_path, data=data, **params)
