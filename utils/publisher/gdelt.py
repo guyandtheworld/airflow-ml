@@ -33,7 +33,7 @@ def publish_gdelt():
         params["id"] = company["entity_id"]
         params["company_name"] = company["entity_legal_name"]
         params["common_names"] = company["common_names"]
-        params["source"] = SOURCE
+        params["source"] = [SOURCE]
         params["storage_bucket"] = BUCKET_NAME
 
         if not company["gdelt_history_processed"]:

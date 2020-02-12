@@ -33,7 +33,7 @@ def publish_google_news():
         params["id"] = company["entity_id"]
         params["company_name"] = company["entity_legal_name"]
         params["common_names"] = company["common_names"]
-        params["source"] = SOURCE
+        params["source"] = [SOURCE]
         params["storage_bucket"] = BUCKET_NAME
 
         if not company["google_news_history_processed"]:
