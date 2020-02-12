@@ -47,7 +47,9 @@ def publish(params):
     client = pubsub_v1.PublisherClient()
     topic_path = client.topic_path(PROJECT_ID, TOPIC_ID)
 
-    data = "{}".format("scraping packet").encode("utf-8")
+    name = "{}-{}-{}".format(params["id"], params["company_name"], params["date_from"])
+
+    data = "{}".format(name).encode("utf-8")
     ref = dict({"num_messages": 0})
 
     params = {

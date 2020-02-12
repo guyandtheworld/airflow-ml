@@ -2,7 +2,7 @@ import os
 import json
 
 from datetime import timedelta, datetime
-from publisher import publish
+from .publisher import publish
 
 
 SCRAPE_TIMEDELTA = timedelta(hours=9)
@@ -18,10 +18,13 @@ def publish_gdelt():
 
     * if new company: scrape based on scenario time-frame
     * else: scrape based on database time-frame
+    * each source would have a different last tracked
     """
     # load the active companies to scrape
-    with open('temp_company_db.json') as f:
-        companies = json.load(f)
+
+    codes_dir = '{}/temp_company_db.json'.format(os.path.dirname(__file__))
+    with open(codes_dir) as file:
+        companies = json.load(file)
 
     for i in range(len(companies)):
         company = companies[i]
@@ -33,7 +36,7 @@ def publish_gdelt():
         params["source"] = SOURCE
         params["storage_bucket"] = BUCKET_NAME
 
-        if not company["history_processed"]:
+        if not company["gdelt_history_processed"]:
             # date from
             date_from = datetime.now() - \
                 timedelta(days=company["scenario_tracking_days"])
@@ -46,7 +49,7 @@ def publish_gdelt():
             params["date_to"] = date_to
         else:
             # date from
-            date_from = datetime.strptime(company["last_tracked"], DATE_FORMAT)
+            date_from = datetime.strptime(company["gdelt_last_tracked"], DATE_FORMAT)
 
             # date to
             date_to = date_from + SCRAPE_TIMEDELTA
@@ -59,13 +62,9 @@ def publish_gdelt():
 
         # if succeeded in publishing update company status & date
         if success:
-            companies[i]["last_tracked"] = date_to
-            if not company["history_processed"]:
-                companies[i]["history_processed"] = True
+            companies[i]["gdelt_last_tracked"] = date_to
+            if not company["gdelt_history_processed"]:
+                companies[i]["gdelt_history_processed"] = True
 
-
-    with open('temp_company_db.json', "w") as f:
-        json.dump(companies, f)
-
-
-publish_gdelt()
+    with open(codes_dir, 'w') as file:
+        json.dump(companies, file)

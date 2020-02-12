@@ -6,7 +6,8 @@
             "Refineria di Korsou"
         ],
         "actively_tracking": true,
-        "history_processed": false,
+        "gdelt_history_processed": false,
+        "google_news_history_processed": false,
         "scenario_tracking_days": 730
     },
     {
@@ -18,7 +19,8 @@
             "Petroleos de Venezuela"
         ],
         "actively_tracking": true,
-        "history_processed": false,
+        "gdelt_history_processed": false,
+        "google_news_history_processed": false,
         "scenario_tracking_days": 730
     },
     {
@@ -28,7 +30,8 @@
             "Klesch"
         ],
         "actively_tracking": true,
-        "history_processed": false,
+        "gdelt_history_processed": false,
+        "google_news_history_processed": false,
         "scenario_tracking_days": 730
     },
     {
@@ -39,7 +42,8 @@
             "China National Petroleum"
         ],
         "actively_tracking": true,
-        "history_processed": false,
+        "gdelt_history_processed": false,
+        "google_news_history_processed": false,
         "scenario_tracking_days": 730
     },
     {
@@ -50,7 +54,8 @@
         ],
         "is_company": true,
         "actively_tracking": true,
-        "history_processed": false,
+        "gdelt_history_processed": false,
+        "google_news_history_processed": false,
         "scenario_tracking_days": 730
     }
 ]
