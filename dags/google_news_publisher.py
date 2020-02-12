@@ -31,7 +31,7 @@ dag = DAG(
     catchup=False)
 
 
-google_news_publisher = PythonOperator(task_id='load_model_utils',
+google_news_publisher = PythonOperator(task_id='publish_to_google_news_scraper',
                                        python_callable=publish_google_news,
                                        dag=dag)
 
