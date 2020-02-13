@@ -1,13 +1,11 @@
 import hashlib
-import json
-import os
 
 from datetime import datetime
 
 from .article import Article
 
 
-def gdelt(data, metadata):
+def gdelt(data, entity_id, source_file):
     """
     first item on the list is the common name
     second item is the ticker. should be updated
@@ -22,7 +20,7 @@ def gdelt(data, metadata):
             hexdigest = hashlib.md5(article['url'].encode()).hexdigest()
             normalized_d = datetime.strptime(article["seendate"], date_format)
             article = Article(
-                entity_id=metadata["entity_object"].id,
+                entity_id=entity_id,
                 title=article["title"],
                 unique_hash=hexdigest,
                 url=article["url"],
@@ -32,13 +30,13 @@ def gdelt(data, metadata):
                 domain=article["domain"],
                 language=article["language"].lower(),
                 source_country=article["sourcecountry"].lower(),
-                raw_file_source=metadata["source_file"]
+                raw_file_source=source_file
             )
             articles.append(article)
     return articles
 
 
-def google_news(data, metadata):
+def google_news(data, entity_id, source_file):
     """
     format for converting google news data
     into our model
@@ -52,7 +50,7 @@ def google_news(data, metadata):
                 article["pubDate"], date_format)
 
             article = Article(
-                entity_id=metadata["entity_object"].id,
+                entity_id=entity_id,
                 title=article["title"],
                 unique_hash=hexdigest,
                 url=article["url"],
@@ -63,7 +61,7 @@ def google_news(data, metadata):
                 description=article["description"],
                 language=article["language"],
                 source_country=article["country"],
-                raw_file_source=metadata["source_file"]
+                raw_file_source=source_file
             )
             articles.append(article)
     return articles

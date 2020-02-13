@@ -1,158 +1,63 @@
 import json
+import logging
 import os
 import shutil
 
 from datetime import datetime, timedelta
 
+from google.cloud import pubsub_v1
 from google.cloud import storage
 from google.cloud.storage import Blob
 
-from data.entity import EntityIndex
 from data.mongo_setup import global_init
 from .utils import process_company_json, write_article, update_entity
 
-# should store sources in the database
-SOURCES = ["gdelt", "google_news"]
+
+logging.basicConfig(level=logging.INFO)
+
+
 BUCKET_NAME = os.getenv("BUCKET_NAME", "alrtai-testing-bucket")
 DESTINATION_FOLDER = "temp"
+PROJECT_ID = os.getenv("PROJECT_ID", "alrt-ai")
+SUBSCRIPTION_NAME = os.getenv("SUBSCRIPTION_NAME", "index_articles")
 
 
-def process_entities(records, entities, storage_client):
+def index_file(bucket, params: dict):
+    processed_records = []
+    logging.info("processing record: {}".format(params["source_file"]))
 
-    bucket = storage_client.bucket(BUCKET_NAME)
-    os.mkdir(DESTINATION_FOLDER)
+    processed_records = process_company_json(params, bucket)
 
-    for record in records:
-        processed_records = []
-        print("processing record: {}".format(record["file"]))
-        metadata = {
-            "source_file": record["file"],
-            "entity_object": record["entity_object"]
-        }
-        processed_records = process_company_json(record, bucket, metadata)
-
-        if len(processed_records) > 0:
-            print("writing {} articles, {} into db".format(
-                len(processed_records), record['name']))
-            resp = write_article(processed_records)
-        else:
-            resp = {"status": "success",
-                    "data": "no articles to insert"}
-
-        if resp["status"] == "success":
-            resp = update_entity(record['entity_object'])
-            print(resp["data"])
-        else:
-            print("error: {}".format(resp["error"]))
-    os.rmdir(DESTINATION_FOLDER)
+    if len(processed_records) > 0:
+        print("writing {} articles, {} into db".format(
+            len(processed_records), params['id']))
+        resp = write_article(processed_records)
+    else:
+        resp = {"status": "success",
+                "data": "no articles to insert"}
+    return resp
 
 
-def filter_new_entities(entities, storage_client):
-    """
-    it processes the history if the entity is not tracked.
-    fetches all files within the corresponding dir - process
-    it and change last tracked to the latest date_to.
+def verify_format(params: dict):
+    keys = ["id", "history_processed",
+            "last_tracked", "source_file"]
 
-    # to do
-    we need to update entity_search_name, ticker, public
-    and aliases once we fetch first set of data
-    """
+    for key in keys:
+        if key not in params:
+            return None
 
-    records = []
-
-    print("fetching new objects")
-    for obj in entities:
-        uid = obj.entity_id
-        name = obj.entity_legal_name
-
-        for source in SOURCES:
-            prefix = "{}-{}/{}".format(uid, name, source)
-            blobs = storage_client.list_blobs(
-                BUCKET_NAME, prefix=prefix)
-
-            for blob in blobs:
-                record = {}
-
-                # feels like this is a hack
-                dates = blob.name.split("/")[-1]
-                to_date = dates.strip(".json").split("Z-")[1]
-                record["file"] = blob.name
-                record["id"] = uid
-                record["name"] = name
-                record["source"] = source
-                record["entity_object"] = obj
-                records.append(record)
-
-        # updating the latest_tracking info
-        to_date = datetime.strptime(to_date, "%Y-%m-%dT%H:%M:%SZ")
-        obj.last_tracked = to_date
-        obj.history_processed = True
-
-    process_entities(records, entities, storage_client)
-
-
-def filter_existing_entities(entities, storage_client):
-    """
-    if the entity is tracked, we fetch and process the latest
-    json based on date_to of the data. it's up to the company
-    intelligence to make sure the data of all time periods
-    are tracked.
-    """
-
-    records = []
-
-    print("fetching new objects")
-    for obj in entities:
-        print(obj.entity_legal_name)
-        uid = obj.entity_id
-        name = obj.entity_legal_name
-
-        for source in SOURCES:
-            prefix = "{}-{}/{}".format(uid, name, source)
-            blobs = storage_client.list_blobs(
-                BUCKET_NAME, prefix=prefix)
-
-            for blob in blobs:
-                record = {}
-
-                dates = blob.name.split("/")[-1]
-                tracking_dates = dates.strip(".json").split("Z-")
-                from_date = tracking_dates[0]
-                to_date = tracking_dates[1]
-                from_date = datetime.strptime(
-                    from_date, "%Y-%m-%dT%H:%M:%S")
-
-                # files that are untracked
-                if from_date >= obj.last_tracked:
-                    record["file"] = blob.name
-                    record["id"] = uid
-                    record["name"] = name
-                    record["source"] = source
-                    record["entity_object"] = obj
-                    records.append(record)
-
-        # exception raised when there are tracking changes
-        try:
-            to_date = datetime.strptime(to_date, "%Y-%m-%dT%H:%M:%SZ")
-            if to_date > obj.last_tracked:
-                obj.last_tracked = to_date
-        except Exception:
-            print("tracking date conflict")
-
-    process_entities(records, entities, storage_client)
+    params["id"] = int(params["id"])
+    params["history_processed"] = json.loads(params["history_processed"])
+    return params
 
 
 def index_articles():
     """
-    indexes articles by maintaining a relationship
-    with the particular entity that is being
-    tracked.
-    * last_tracked is the date_to of the latest file
-    * plug-in scripts based on source
-    * updates tracking attribute when daily news processed
-    * auto-updates from the last date it was tracked
-    """
+    indexes articles by subscribing to news aggregator output
 
+    * https://github.com/googleapis/google-cloud-java/issues/1661
+    * https://stackoverflow.com/questions/48196679/gcp-pubsub-synchronous-pull-subscriber-in-python
+    """
     # setup connection to database
     global_init()
 
@@ -162,22 +67,52 @@ def index_articles():
     if os.path.exists(DESTINATION_FOLDER):
         shutil.rmtree(DESTINATION_FOLDER)
 
+    bucket = storage_client.bucket(BUCKET_NAME)
+    os.mkdir(DESTINATION_FOLDER)
+
+    client = pubsub_v1.SubscriberClient()
+
+    subscription_path = client.subscription_path(PROJECT_ID, SUBSCRIPTION_NAME)
+
+    def callback(message):
+        logging.info(
+            "Received message {} of message ID {}\n".format(
+                message, message.message_id
+            )
+        )
+
+        params = {}
+        if message.attributes:
+            for key in message.attributes:
+                value = message.attributes.get(key)
+                params[key] = value
+
+        params["source_file"] = message.data
+
+        params = verify_format(params)
+
+        if params:
+            try:
+                response = index_file(bucket, params)
+                logging.info(response)
+                message.ack()
+                # os.rmdir(DESTINATION_FOLDER)
+            except Exception as e:
+                logging.info(
+                    "message processing failed. up for retry. - " + str(e))
+        else:
+            logging.info("message format broken")
+
+
+    streaming_pull_future = client.subscribe(
+        subscription_path, callback=callback
+    )
+    logging.info("Listening for messages on {}..\n".format(subscription_path))
+
     try:
-        objects = EntityIndex.objects().filter(actively_tracking=True)
-    except Exception as e:
-        print(e)
-        return
-
-    new_entities = [
-        obj for obj in objects if obj.history_processed == False]
-
-    old_entities = [
-        obj for obj in objects if obj.history_processed == True]
-
-    print("new entires: {}".format(len(new_entities)))
-    print("tracked entries: {}".format(len(old_entities)))
-    filter_new_entities(new_entities, storage_client)
-    filter_existing_entities(old_entities, storage_client)
+        streaming_pull_future.result()
+    except:  # noqa
+        streaming_pull_future.cancel()
 
 
 if __name__ == "__main__":

@@ -59,25 +59,7 @@ def write_article(records: List[Article]) -> dict:
     return resp
 
 
-def update_entity(entity: EntityIndex) -> dict:
-    """
-    update the entities in mongo db
-    """
-    try:
-        entity.save()
-        resp = {"status": "success",
-                "data": "updated {}".format(entity["entity_legal_name"])
-                }
-    except ConnectionError as e:
-        resp = {"status": "error",
-                "error": e}
-    except Exception as e:
-        resp = {"status": "error",
-                "error": e}
-    return resp
-
-
-def index_articles(record: dict, metadata):
+def index_articles(record: dict):
     """
     depending on the source the article is from
     we pre-process the json and write it onto
@@ -90,14 +72,14 @@ def index_articles(record: dict, metadata):
     ## returns
     processed articles based on MongoDB Article model
     """
-    with open(record["file"], "r") as fp:
+    with open(record["source_file"], "r") as fp:
         data = json.load(fp)
         processor = getattr(source_processor, record["source"])
-        processed_records = processor(data, metadata)
+        processed_records = processor(data, )
     return processed_records
 
 
-def process_company_json(record: dict, bucket, metadata: dict):
+def process_company_json(record: dict, bucket):
     """
     fetches file and stores it locally to fetch and preprocess
     returns the processed articles
@@ -110,11 +92,17 @@ def process_company_json(record: dict, bucket, metadata: dict):
     ## returns
     processed articles based on MongoDB Article model
     """
-    blob = bucket.blob(record["file"])
-    hash_f = hashlib.sha1(record["file"].encode("UTF-8")).hexdigest()
+
+    # check if file exists
+
+    blob = bucket.blob(record["source_file"])
+
+    # naming temp file
+    hash_f = hashlib.sha1(record["source_file"].encode("UTF-8")).hexdigest()
     file_path = "{}/{}.json".format(DESTINATION_FOLDER, hash_f)
+
     blob.download_to_filename(file_path)
-    record["file"] = file_path
-    processed_records = index_articles(record, metadata)
+    record["source_file"] = file_path
+    processed_records = index_articles(record)
     os.remove(file_path)
     return processed_records
