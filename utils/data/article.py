@@ -4,7 +4,6 @@ import mongoengine
 
 from .title_analytics import TitleAnalytics
 from .body_analytics import BodyAnalytics
-from .bucket import Bucket
 
 
 class Article(mongoengine.Document):
@@ -12,7 +11,7 @@ class Article(mongoengine.Document):
     This model will be used to index the articles in relation
     to the Entity that we are using to search
     """
-    entity_id = mongoengine.ObjectIdField(
+    entity_id = mongoengine.IntField(
         required=True)  # entity article is related to
     title = mongoengine.StringField(required=True)
     unique_hash = mongoengine.StringField(required=True)
@@ -31,8 +30,6 @@ class Article(mongoengine.Document):
         TitleAnalytics, required=False)
     body_analytics = mongoengine.EmbeddedDocumentField(
         BodyAnalytics, required=False)
-    buckets = mongoengine.EmbeddedDocumentListField(
-        Bucket, required=False)
     raw_file_source = mongoengine.StringField(
         required=True)  # which file the article is in
     has_term_on_title = mongoengine.BooleanField(
