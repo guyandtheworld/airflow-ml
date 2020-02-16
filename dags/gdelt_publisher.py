@@ -27,7 +27,7 @@ default_args = {
 
 dag = DAG(
     'gdelt_publisher', default_args=default_args,
-    schedule_interval=timedelta(hours=8),
+    schedule_interval=timedelta(hours=9),
     catchup=False)
 
 
