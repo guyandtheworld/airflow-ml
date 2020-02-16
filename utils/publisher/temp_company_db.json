@@ -8,7 +8,7 @@
         "actively_tracking": true,
         "gdelt_history_processed": false,
         "google_news_history_processed": false,
-        "scenario_tracking_days": 730
+        "scenario_tracking_days": 365
     },
     {
         "entity_id": "2",
@@ -21,7 +21,7 @@
         "actively_tracking": true,
         "gdelt_history_processed": false,
         "google_news_history_processed": false,
-        "scenario_tracking_days": 730
+        "scenario_tracking_days": 365
     },
     {
         "entity_id": "3",
@@ -32,7 +32,7 @@
         "actively_tracking": true,
         "gdelt_history_processed": false,
         "google_news_history_processed": false,
-        "scenario_tracking_days": 730
+        "scenario_tracking_days": 365
     },
     {
         "entity_id": "4",
@@ -44,7 +44,7 @@
         "actively_tracking": true,
         "gdelt_history_processed": false,
         "google_news_history_processed": false,
-        "scenario_tracking_days": 730
+        "scenario_tracking_days": 365
     },
     {
         "entity_id": "5",
@@ -56,6 +56,6 @@
         "actively_tracking": true,
         "gdelt_history_processed": false,
         "google_news_history_processed": false,
-        "scenario_tracking_days": 730
+        "scenario_tracking_days": 365
     }
 ]
