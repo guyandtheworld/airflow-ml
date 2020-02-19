@@ -1,4 +1,5 @@
 import concurrent.futures
+import re
 import requests
 import time
 import urllib3
@@ -17,7 +18,7 @@ def warn(*args, **kwargs):
 
 
 out = []
-CONNECTIONS = 500
+CONNECTIONS = 80
 TIMEOUT = 5
 
 warnings.warn = warn
@@ -42,9 +43,25 @@ def do_request(url):
         return "", 404
 
 
+def body_cleaning(text):
+    """
+    function to clean news content
+    """
+
+    text = re.sub(r'\n|\xa0|\xad|\d+\.\d+\W?|\+', " ", text)
+    text = re.sub(r'\'', "", text)
+    text = re.sub(r'(By|by)\s\S+\s\S+', '', text)
+    text = re.sub(r'(Published|Updated):\s\d\d:\d\d\s\S{3}', "", text)
+    text = re.sub(r'\d{2}\s(January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}',
+                  "", text)
+    text = re.sub(r'FILE\sPHOTO:.*Photo', "", text)
+    return text
+
+
 def gen_text_dragnet(article, timeout):
     content, status_code = do_request(article["url"])
-    article.update(body=content[:500], status_code=status_code)
+    cleaned_content = body_cleaning(content[:500])
+    article.update(body=cleaned_content, status_code=status_code)
     return status_code
 
 
