@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import time
 
 from google.cloud import pubsub_v1
 
@@ -63,12 +62,12 @@ def publish(params):
         "history_processed": json.dumps(params["history_processed"])
     }
 
-    api_future = client.publish(topic_path, data=data, **params)
+    # api_future = client.publish(topic_path, data=data, **params)
 
-    api_future.add_done_callback(get_callback(api_future, data, ref))
+    # api_future.add_done_callback(get_callback(api_future, data, ref))
 
-    while api_future.running():
-        time.sleep(0.5)
-        logging.info("Published {} message(s).".format(ref["num_messages"]))
+    # while api_future.running():
+    #     time.sleep(0.5)
+    logging.info("Published {} message(s).".format(ref["num_messages"]))
 
     return RESULT

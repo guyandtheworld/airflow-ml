@@ -1,8 +1,12 @@
 import os
 import json
+import logging
+
+import pandas as pd
 
 from datetime import timedelta, datetime
 from .publisher import publish
+from data.postgres_utils import connect
 
 
 SCRAPE_TIMEDELTA = timedelta(hours=1)
@@ -26,46 +30,62 @@ def publish_google_news():
     with open(codes_dir) as file:
         companies = json.load(file)
 
-    for i in range(len(companies)):
-        company = companies[i]
+    query = '''
+               select entity.uuid, entity.name as legal_name,
+               alias.name as alias from
+               public.apis_entity entity
+               full outer join
+               public.apis_alias alias
+               on entity.uuid = alias."entityID_id"
+               where "manualEntry"=true and alias is not null;
+            '''
 
-        params = {}
-        params["id"] = company["entity_id"]
-        params["company_name"] = company["entity_legal_name"]
-        params["common_names"] = company["common_names"]
-        params["source"] = [SOURCE]
-        params["storage_bucket"] = BUCKET_NAME
-        params["history_processed"] = company["google_news_history_processed"]
+    results = connect(query)
 
-        if not company["google_news_history_processed"]:
-            # date from
-            date_from = datetime.now() - \
-                timedelta(days=company["scenario_tracking_days"])
-            date_from = datetime.strftime(date_from, DATE_FORMAT)
-            params["date_from"] = date_from
+    df = pd.DataFrame(results, columns=["uuid", "name", "alias"])
+    print(df.head())
+    # df["common_names"] = df[]
 
-            # date to
-            date_to = datetime.now()
-            date_to = datetime.strftime(date_to, DATE_FORMAT)
-            params["date_to"] = date_to
-        else:
-            # date from
-            date_from = datetime.strptime(company["google_news_last_tracked"], DATE_FORMAT)
+    # for result in results:
+    #     # company = companies[i]
 
-            # date to
-            date_to = date_from + SCRAPE_TIMEDELTA
-            date_to = datetime.strftime(date_to, DATE_FORMAT)
-            date_from = datetime.strftime(date_from, DATE_FORMAT)
-            params["date_from"] = date_from
-            params["date_to"] = date_to
+    #     params = {}
+    #     params["id"] = result["uuid"]
+    #     params["company_name"] = company["name"]
+    #     params["common_names"] = company["common_names"]
+    #     params["source"] = [SOURCE]
+    #     params["storage_bucket"] = BUCKET_NAME
+    #     params["history_processed"] = company["google_news_history_processed"]
 
-        success = publish(params)
+    #     if not company["google_news_history_processed"]:
+    #         # date from
+    #         date_from = datetime.now() - \
+    #             timedelta(days=company["scenario_tracking_days"])
+    #         date_from = datetime.strftime(date_from, DATE_FORMAT)
+    #         params["date_from"] = date_from
 
-        # if succeeded in publishing update company status & date
-        if success:
-            companies[i]["google_news_last_tracked"] = date_to
-            if not company["google_news_history_processed"]:
-                companies[i]["google_news_history_processed"] = True
+    #         # date to
+    #         date_to = datetime.now()
+    #         date_to = datetime.strftime(date_to, DATE_FORMAT)
+    #         params["date_to"] = date_to
+    #     else:
+    #         # date from
+    #         date_from = datetime.strptime(company["google_news_last_tracked"], DATE_FORMAT)
 
-    with open(codes_dir, 'w') as file:
-        json.dump(companies, file)
+    #         # date to
+    #         date_to = date_from + SCRAPE_TIMEDELTA
+    #         date_to = datetime.strftime(date_to, DATE_FORMAT)
+    #         date_from = datetime.strftime(date_from, DATE_FORMAT)
+    #         params["date_from"] = date_from
+    #         params["date_to"] = date_to
+
+    #     success = publish(params)
+
+    #     # if succeeded in publishing update company status & date
+    #     if success:
+    #         companies[i]["google_news_last_tracked"] = date_to
+    #         if not company["google_news_history_processed"]:
+    #             companies[i]["google_news_history_processed"] = True
+
+    # with open(codes_dir, 'w') as file:
+    #     json.dump(companies, file)
