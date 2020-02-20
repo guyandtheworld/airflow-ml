@@ -28,7 +28,7 @@ def connect(query='SELECT version()'):
         cur = conn.cursor()
 
         # execute a statement
-        logging.info('PostgreSQL database version:')
+        logging.info('running : {}'.format(query))
         cur.execute(query)
 
         # display the PostgreSQL database server version
@@ -41,7 +41,6 @@ def connect(query='SELECT version()'):
     finally:
         if conn is not None:
             conn.close()
-            logging.info('Database connection closed.')
 
     return results
 
