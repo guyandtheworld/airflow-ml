@@ -1,12 +1,13 @@
 import os
 import json
 import logging
+import uuid
 
 import pandas as pd
 
 from datetime import timedelta, datetime
 from .publisher import publish
-from data.postgres_utils import connect
+from data.postgres_utils import connect, insert_tracking
 
 
 SCRAPE_TIMEDELTA = timedelta(hours=1)
@@ -72,7 +73,8 @@ def publish_google_news():
 
     df = df.apply(get_last_tracked, axis=1)
 
-    for index, row in df.iterrows():
+    items_to_insert = []
+    for _, row in df.iterrows():
         params = {}
         params["id"] = row["uuid"]
         params["company_name"] = row["name"]
@@ -104,8 +106,9 @@ def publish_google_news():
             params["date_to"] = date_to_write
 
         # success = publish(params)
-        # print(params)
-
         # if succeeded in publishing update company status & date
-        # if success:
-        print(params["id"], SOURCE_UUID, date_to)
+        if success:
+            items_to_insert.append((str(uuid.uuid4()), str(date_to), \
+                                params["id"], SOURCE_UUID,))
+
+    insert_tracking(items_to_insert)

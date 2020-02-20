@@ -44,5 +44,29 @@ def connect(query='SELECT version()'):
 
     return results
 
+
+def insert_tracking(track_list):
+    """
+    insert multiple vendors into the vendors table
+    """
+    sql = "INSERT INTO public.apis_lastscrape VALUES(%s, %s, %s, %s)"
+    conn = None
+
+    logging.info(track_list)
+    try:
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+        cur.executemany(sql, track_list)
+        conn.commit()
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 if __name__ == '__main__':
     results = connect()
