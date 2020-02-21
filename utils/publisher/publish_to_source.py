@@ -1,6 +1,4 @@
 import os
-import json
-import logging
 import uuid
 
 import pandas as pd
@@ -10,14 +8,11 @@ from .publisher import publish
 from data.postgres_utils import connect, insert_tracking
 
 
-SCRAPE_TIMEDELTA = timedelta(hours=1)
-SOURCE = "google_news"
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 BUCKET_NAME = os.getenv("BUCKET_NAME", "news_staging_bucket")
-SOURCE_UUID = "1c74e10b-30fd-4052-9c00-eec0fc0ecdcf"
 
 
-def get_last_tracked(row):
+def get_last_tracked(row, source):
 
     # query which we'll use to find out if we've tracked the particular entity
     # if we're tracking, it return the last tracked date for the particular
@@ -29,9 +24,9 @@ def get_last_tracked(row):
             (public.apis_lastscrape as ls left join
             public.apis_scrapesource as ss
             on ls."scrapeSourceID_id"=ss.uuid)
-            where name = 'google_news' and
+            where name = '{}' and
             ls."entityID_id" = '{}') fp
-            """.format(row["uuid"])
+            """.format(source, row["uuid"])
 
     results = connect(query)
 
@@ -44,11 +39,14 @@ def get_last_tracked(row):
     return row
 
 
-def publish_google_news():
+def publish_to_source(**kwargs):
     """
     publishes companies to scrape to the pubsub
     so news aggregator may process the data
     """
+    SCRAPE_TIMEDELTA = timedelta(hours=kwargs['timedelta'])
+    SOURCE_UUID = kwargs["source_uuid"]
+    SOURCE = kwargs["source"]
 
     # load companies which were added to be tracked - manualEntry
     # and with alias given so that we can scrape it
@@ -71,7 +69,7 @@ def publish_google_news():
     df = df.groupby(['uuid', 'name', 'trackingDays'])['alias'].apply(list) \
                     .reset_index()
 
-    df = df.apply(get_last_tracked, axis=1)
+    df = df.apply(lambda x: get_last_tracked(x, SOURCE), axis=1)
 
     items_to_insert = []
     for _, row in df.iterrows():
@@ -105,10 +103,11 @@ def publish_google_news():
             params["date_from"] = date_from_write
             params["date_to"] = date_to_write
 
-        # success = publish(params)
+        success = publish(params)
+
         # if succeeded in publishing update company status & date
         if success:
             items_to_insert.append((str(uuid.uuid4()), str(date_to), \
-                                params["id"], SOURCE_UUID,))
+                                    params["id"], SOURCE_UUID,))
 
     insert_tracking(items_to_insert)

@@ -10,7 +10,7 @@ from datetime import timedelta, datetime
 path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
 sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
 
-from publisher.gdelt import publish_gdelt
+from publisher.publish_to_source import publish_to_source
 
 
 default_args = {
@@ -32,7 +32,10 @@ dag = DAG(
 
 
 gdelt_publisher = PythonOperator(task_id='publish_to_gdelt_news_scraper',
-                                 python_callable=publish_gdelt,
+                                 python_callable=publish_to_source,
+                                 op_kwargs={"source": "gdelt",
+                                 "source_uuid": "93d7f1d2-cb5a-4372-a255-50114765cd03",
+                                 "timedelta": 9},
                                  dag=dag)
 
 gdelt_publisher
