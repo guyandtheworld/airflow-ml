@@ -1,4 +1,7 @@
+import json
+import logging
 import en_core_web_sm
+
 
 from collections import defaultdict
 
@@ -6,8 +9,12 @@ from data.article import Article
 from data.title_analytics import TitleAnalytics
 from data.body_analytics import BodyAnalytics
 from data.mongo_setup import global_init
+from data.postgres_utils import connect, update_attributes
+
 
 nlp = en_core_web_sm.load()
+
+logging.basicConfig(level=logging.INFO)
 
 # entity_types_to_save = ["PERSON", "NORP", "FACILITY", "ORG", "GPE"]
 
@@ -31,7 +38,7 @@ def named_entity_recognition(text: str) -> dict:
         if key in entity_types_to_save:
             results[key] = list(set(ner[key]))
 
-    return results
+    return {"entities": results}
 
 
 def extract_entities_from_headlines():
@@ -40,26 +47,38 @@ def extract_entities_from_headlines():
     of the article
     """
 
-    global_init()
+    query = """
+                select story.uuid, title from
+                public.apis_story story
+                left join
+                (select * from public.apis_storyentities
+                where is_headline=true) entity
+                on story.uuid = entity."storyID_id"
+                where entities is null
+                LIMIT 5
+            """
 
-    try:
-        articles = Article.objects.filter(
-            title_analytics__exists=False)[:20000]
-    except Exception as e:
-        print(e)
-        raise
+    response = connect(query)
 
     count = 1
-    print("extracting entities from {} articles".format(len(articles)))
-    for article in articles:
-        entities = named_entity_recognition(article.title)
-        title_analytics = TitleAnalytics(entities=entities)
-        article.title_analytics = title_analytics
-        article.update(title_analytics=title_analytics)
+
+    results = []
+    logging.info("extracting entities from {} articles".format(len(response)))
+    for uuid, headline in response:
+        entities = named_entity_recognition(headline)
+        results.append(('{}'.format(uuid), str(json.dumps(entities))))
         if not count % 100:
-            print("processed: {}".format(count))
+            logging.info("processed: {}".format(count))
         count += 1
-    print("finished")
+
+    insert_query = """
+                    INSERT INTO public.apis_storyentities
+                    (uuid, is_headline, entities, "storyID_id")
+                    VALUES(?, false, '', ?);
+                   """
+
+    update_attributes(results)
+    logging.info("finished")
 
 
 def extract_entities_from_body():
@@ -74,17 +93,17 @@ def extract_entities_from_body():
         articles = Article.objects.filter(body__exists=True).filter(
             body_analytics__exists=False)[:20000]
     except Exception as e:
-        print(e)
+        logging.info(e)
         raise
 
     count = 1
-    print("extracting entities from {} articles".format(len(articles)))
+    logging.info("extracting entities from {} articles".format(len(articles)))
     for article in articles:
         entities = named_entity_recognition(article.body)
         body_analytics = BodyAnalytics(entities=entities)
         article.body_analytics = body_analytics
         article.update(body_analytics=body_analytics)
         if not count % 100:
-            print("processed: {}".format(count))
+            logging.info("processed: {}".format(count))
         count += 1
-    print("finished")
+    logging.info("finished")

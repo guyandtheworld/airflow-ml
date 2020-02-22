@@ -68,5 +68,36 @@ def insert_tracking(track_list):
             conn.close()
 
 
+def update_attributes(update_list):
+    """
+    insert multiple vendors into the vendors table
+    """
+    conn = None
+
+    query = """
+            UPDATE public.apis_story AS t
+            SET title_analytics = e.analytics::jsonb
+            FROM (VALUES %s) AS e(uuid, analytics)
+            WHERE e.uuid = t.uuid::text;
+            """
+
+    logging.info(update_list)
+    try:
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+        psycopg2.extras.execute_values(
+            cur, query, update_list, template=None, page_size=100
+        )
+        conn.commit()
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 if __name__ == '__main__':
     results = connect()
