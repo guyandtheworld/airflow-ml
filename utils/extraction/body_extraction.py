@@ -72,6 +72,7 @@ def extract_body():
     Processing broken URLs are a huge pain in the ass
     """
 
+    # fetch body from articles where status code is null
     query = """
                SELECT story.uuid, story.url
                FROM public.apis_story AS story

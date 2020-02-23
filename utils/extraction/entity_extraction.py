@@ -44,6 +44,8 @@ def entities_from_headlines():
     of the article
     """
 
+    # fetch titles of all stories we haven't done
+    # entity recognition
     query = """
                 select story.uuid, title from
                 public.apis_story story
@@ -86,6 +88,8 @@ def entities_from_body():
     of the article
     """
 
+    # fetch all stories where body exists and we haven't done
+    # entity recognition
     query = """
                 SELECT story.uuid, body.body FROM
                 public.apis_story story

@@ -36,6 +36,8 @@ def sentiment_on_headlines():
     runs sentiment analysis on each article
     """
 
+    # fetch titles of all stories we haven't done
+    # sentiment analysis
     query = """
                SELECT story.uuid, title FROM
                public.apis_story story
@@ -76,6 +78,8 @@ def sentiment_from_body():
     runs sentiment analysis on each article
     """
 
+    # fetch all stories where body exists and we haven't done
+    # sentiment analysis
     query = """
                 SELECT story.uuid, body.body FROM
                 public.apis_story story
@@ -88,7 +92,7 @@ def sentiment_from_body():
                 ON story.uuid = body."storyID_id"
                 WHERE sentiment IS NULL
                 AND body IS NOT NULL
-                LIMIT 5
+                LIMIT 10000
             """
 
     response = connect(query)
