@@ -1,15 +1,12 @@
 import json
 import logging
+import uuid
 import en_core_web_sm
 
 
 from collections import defaultdict
 
-from data.article import Article
-from data.title_analytics import TitleAnalytics
-from data.body_analytics import BodyAnalytics
-from data.mongo_setup import global_init
-from data.postgres_utils import connect, update_attributes
+from data.postgres_utils import connect, insert_values
 
 
 nlp = en_core_web_sm.load()
@@ -41,7 +38,7 @@ def named_entity_recognition(text: str) -> dict:
     return {"entities": results}
 
 
-def extract_entities_from_headlines():
+def entities_from_headlines():
     """
     extracts entities using spaCy from the title
     of the article
@@ -55,18 +52,19 @@ def extract_entities_from_headlines():
                 where is_headline=true) entity
                 on story.uuid = entity."storyID_id"
                 where entities is null
-                LIMIT 5
+                LIMIT 20000
             """
 
     response = connect(query)
 
     count = 1
 
-    results = []
+    values = []
     logging.info("extracting entities from {} articles".format(len(response)))
-    for uuid, headline in response:
+    for story_uuid, headline in response:
         entities = named_entity_recognition(headline)
-        results.append(('{}'.format(uuid), str(json.dumps(entities))))
+        values.append((str(uuid.uuid4()), True,
+                       json.dumps(entities), story_uuid))
         if not count % 100:
             logging.info("processed: {}".format(count))
         count += 1
@@ -74,10 +72,10 @@ def extract_entities_from_headlines():
     insert_query = """
                     INSERT INTO public.apis_storyentities
                     (uuid, is_headline, entities, "storyID_id")
-                    VALUES(?, false, '', ?);
+                    VALUES(%s, %s, %s, %s);
                    """
 
-    update_attributes(results)
+    insert_values(insert_query, values)
     logging.info("finished")
 
 
@@ -87,23 +85,23 @@ def extract_entities_from_body():
     of the article
     """
 
-    global_init()
+    # global_init()
 
-    try:
-        articles = Article.objects.filter(body__exists=True).filter(
-            body_analytics__exists=False)[:20000]
-    except Exception as e:
-        logging.info(e)
-        raise
+    # try:
+    #     articles = Article.objects.filter(body__exists=True).filter(
+    #         body_analytics__exists=False)[:20000]
+    # except Exception as e:
+    #     logging.info(e)
+    #     raise
 
-    count = 1
-    logging.info("extracting entities from {} articles".format(len(articles)))
-    for article in articles:
-        entities = named_entity_recognition(article.body)
-        body_analytics = BodyAnalytics(entities=entities)
-        article.body_analytics = body_analytics
-        article.update(body_analytics=body_analytics)
-        if not count % 100:
-            logging.info("processed: {}".format(count))
-        count += 1
+    # count = 1
+    # logging.info("extracting entities from {} articles".format(len(articles)))
+    # for article in articles:
+    #     entities = named_entity_recognition(article.body)
+    #     body_analytics = BodyAnalytics(entities=entities)
+    #     article.body_analytics = body_analytics
+    #     article.update(body_analytics=body_analytics)
+    #     if not count % 100:
+    #         logging.info("processed: {}".format(count))
+    #     count += 1
     logging.info("finished")

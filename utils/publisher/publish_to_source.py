@@ -5,11 +5,12 @@ import pandas as pd
 
 from datetime import timedelta, datetime
 from .publisher import publish
-from data.postgres_utils import connect, insert_tracking
+from data.postgres_utils import connect, insert_values
 
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 BUCKET_NAME = os.getenv("BUCKET_NAME", "news_staging_bucket")
+INSERT_QUERY = "INSERT INTO public.apis_lastscrape VALUES(%s, %s, %s, %s)"
 
 
 def get_last_tracked(row, source):
@@ -65,9 +66,10 @@ def publish_to_source(**kwargs):
 
     results = connect(query)
 
-    df = pd.DataFrame(results, columns=["uuid", "name", "alias", "trackingDays"])
+    df = pd.DataFrame(results, columns=[
+                      "uuid", "name", "alias", "trackingDays"])
     df = df.groupby(['uuid', 'name', 'trackingDays'])['alias'].apply(list) \
-                    .reset_index()
+        .reset_index()
 
     df = df.apply(lambda x: get_last_tracked(x, SOURCE), axis=1)
 
@@ -107,7 +109,7 @@ def publish_to_source(**kwargs):
 
         # if succeeded in publishing update company status & date
         if success:
-            items_to_insert.append((str(uuid.uuid4()), str(date_to), \
+            items_to_insert.append((str(uuid.uuid4()), str(date_to),
                                     params["id"], SOURCE_UUID,))
 
-    insert_tracking(items_to_insert)
+    insert_values(INSERT_QUERY, items_to_insert)
