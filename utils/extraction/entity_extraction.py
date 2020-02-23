@@ -5,7 +5,7 @@ import en_core_web_sm
 
 
 from collections import defaultdict
-
+from datetime import datetime
 from data.postgres_utils import connect, insert_values
 
 
@@ -52,7 +52,7 @@ def entities_from_headlines():
                 where is_headline=true) entity
                 on story.uuid = entity."storyID_id"
                 where entities is null
-                LIMIT 20000
+                LIMIT 10000
             """
 
     response = connect(query)
@@ -64,15 +64,16 @@ def entities_from_headlines():
     for story_uuid, headline in response:
         entities = named_entity_recognition(headline)
         values.append((str(uuid.uuid4()), True,
-                       json.dumps(entities), story_uuid))
+                       json.dumps(entities), story_uuid,
+                       str(datetime.now())))
         if not count % 100:
             logging.info("processed: {}".format(count))
         count += 1
 
     insert_query = """
                     INSERT INTO public.apis_storyentities
-                    (uuid, is_headline, entities, "storyID_id")
-                    VALUES(%s, %s, %s, %s);
+                    (uuid, is_headline, entities, "storyID_id", "entryTime")
+                    VALUES(%s, %s, %s, %s, %s);
                    """
 
     insert_values(insert_query, values)
@@ -85,23 +86,41 @@ def entities_from_body():
     of the article
     """
 
-    # global_init()
+    query = """
+                SELECT story.uuid, body.body FROM
+                public.apis_story story
+                LEFT JOIN
+                (SELECT * FROM public.apis_storyentities
+                WHERE is_headline=false) entity
+                ON story.uuid = entity."storyID_id"
+                LEFT JOIN
+                public.apis_storybody AS body
+                ON story.uuid = body."storyID_id"
+                WHERE entities IS NULL
+                AND body IS NOT NULL
+                LIMIT 10000
+            """
 
-    # try:
-    #     articles = Article.objects.filter(body__exists=True).filter(
-    #         body_analytics__exists=False)[:20000]
-    # except Exception as e:
-    #     logging.info(e)
-    #     raise
+    response = connect(query)
 
-    # count = 1
-    # logging.info("extracting entities from {} articles".format(len(articles)))
-    # for article in articles:
-    #     entities = named_entity_recognition(article.body)
-    #     body_analytics = BodyAnalytics(entities=entities)
-    #     article.body_analytics = body_analytics
-    #     article.update(body_analytics=body_analytics)
-    #     if not count % 100:
-    #         logging.info("processed: {}".format(count))
-    #     count += 1
+    count = 1
+
+    values = []
+    logging.info("extracting entities from {} articles".format(len(response)))
+    for story_uuid, body in response:
+        entities = named_entity_recognition(body)
+        values.append((str(uuid.uuid4()), False,
+                       json.dumps(entities), story_uuid,
+                       str(datetime.now())))
+        if not count % 100:
+            logging.info("processed: {}".format(count))
+        count += 1
+
+    insert_query = """
+                    INSERT INTO public.apis_storyentities
+                    (uuid, is_headline, entities, "storyID_id", "entryTime")
+                    VALUES(%s, %s, %s, %s, %s);
+                   """
+
+    insert_values(insert_query, values)
     logging.info("finished")
