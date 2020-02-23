@@ -1,7 +1,7 @@
 import json
 import logging
 import uuid
-import en_core_web_lg
+import en_core_web_md
 
 
 from collections import defaultdict
@@ -9,7 +9,7 @@ from datetime import datetime
 from data.postgres_utils import connect, insert_values
 
 
-nlp = en_core_web_lg.load()
+nlp = en_core_web_md.load()
 
 logging.basicConfig(level=logging.INFO)
 
