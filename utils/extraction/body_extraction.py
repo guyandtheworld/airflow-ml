@@ -1,5 +1,6 @@
 import concurrent.futures
 import re
+import logging
 import requests
 import time
 import urllib3
@@ -8,9 +9,9 @@ import warnings
 import pandas as pd
 from dragnet import extract_content
 
-from data.article import Article
-from data.title_analytics import TitleAnalytics
-from data.mongo_setup import global_init
+from data.postgres_utils import connect, update_values
+
+logging.basicConfig(level=logging.INFO)
 
 
 def warn(*args, **kwargs):
@@ -59,40 +60,52 @@ def body_cleaning(text):
 
 
 def gen_text_dragnet(article, timeout):
-    content, status_code = do_request(article["url"])
-    cleaned_content = body_cleaning(content[:500])
-    article.update(body=cleaned_content, status_code=status_code)
-    return status_code
+    content, status_code = do_request(article[1])
+    body = body_cleaning(content[:600])
+    return (article[0], body, status_code)
 
 
 def extract_body():
     """
     Processing broken URLs are a huge pain in the ass
     """
-    global_init()
-    try:
-        articles = Article.objects.filter(
-            status_code__exists=False)[:5000]
-    except Exception as e:
-        print(e)
-        raise
 
-    print("extracting bodies from {} articles".format(len(articles)))
+    query = """
+               SELECT uuid, url
+               FROM public.apis_story
+               WHERE status_code IS NULL
+               LIMIT 100;
+            """
 
+    response = connect(query)
+
+    logging.info("extracting bodies from {} articles".format(len(response)))
+
+    values = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=CONNECTIONS) as executor:
         future_to_url = (executor.submit(gen_text_dragnet, article, TIMEOUT)
-                         for article in articles)
+                         for article in response)
         time1 = time.time()
         for future in concurrent.futures.as_completed(future_to_url):
             try:
-                data = future.result()
+                uuid, body, status = future.result()
+                values.append((uuid, body, status))
             except Exception as exc:
-                data = str(type(exc))
+                status = str(type(exc))
             finally:
-                out.append(data)
+                out.append(status)
                 print(str(len(out)), end="\r")
 
         time2 = time.time()
 
-    print(f'Took {time2-time1:.2f} s')
-    print(pd.Series(out).value_counts())
+    query = """
+            UPDATE public.apis_story AS t
+            SET body = e.body::text, status_code = e.status_code
+            FROM (VALUES %s) AS e(uuid, body, status_code)
+            WHERE e.uuid = t.uuid::text;
+            """
+
+    update_values(query, values)
+
+    logging.info(f'Took {time2-time1:.2f} s')
+    logging.info(pd.Series(out).value_counts())

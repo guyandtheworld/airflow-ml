@@ -79,7 +79,7 @@ def entities_from_headlines():
     logging.info("finished")
 
 
-def extract_entities_from_body():
+def entities_from_body():
     """
     extracts entities using spaCy from the body
     of the article

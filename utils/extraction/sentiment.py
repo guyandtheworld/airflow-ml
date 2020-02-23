@@ -69,7 +69,7 @@ def sentiment_on_headlines():
     logging.info("finished")
 
 
-def sentiment_analysis_on_body():
+def sentiment_from_body():
     """
     runs sentiment analysis on each article
     """
