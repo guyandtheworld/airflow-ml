@@ -3,13 +3,15 @@ import re
 import logging
 import requests
 import time
+import uuid
 import urllib3
 import warnings
 
 import pandas as pd
-from dragnet import extract_content
 
-from data.postgres_utils import connect, update_values
+from data.postgres_utils import connect, insert_values
+from datetime import datetime
+from dragnet import extract_content
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,7 +21,7 @@ def warn(*args, **kwargs):
 
 
 out = []
-CONNECTIONS = 80
+CONNECTIONS = 100
 TIMEOUT = 5
 
 warnings.warn = warn
@@ -71,10 +73,13 @@ def extract_body():
     """
 
     query = """
-               SELECT uuid, url
-               FROM public.apis_story
+               SELECT story.uuid, story.url
+               FROM public.apis_story AS story
+               LEFT JOIN
+               public.apis_storybody AS body
+               ON story.uuid = body."storyID_id"
                WHERE status_code IS NULL
-               LIMIT 100;
+               LIMIT 10000;
             """
 
     response = connect(query)
@@ -88,8 +93,9 @@ def extract_body():
         time1 = time.time()
         for future in concurrent.futures.as_completed(future_to_url):
             try:
-                uuid, body, status = future.result()
-                values.append((uuid, body, status))
+                story_uuid, body, status = future.result()
+                values.append((str(uuid.uuid4()), body, status,
+                               str(datetime.now()),  story_uuid))
             except Exception as exc:
                 status = str(type(exc))
             finally:
@@ -99,13 +105,12 @@ def extract_body():
         time2 = time.time()
 
     query = """
-            UPDATE public.apis_story AS t
-            SET body = e.body::text, status_code = e.status_code
-            FROM (VALUES %s) AS e(uuid, body, status_code)
-            WHERE e.uuid = t.uuid::text;
+            INSERT INTO public.apis_storybody
+            (uuid, body, status_code, "entryTime", "storyID_id")
+            VALUES(%s, %s, %s, %s, %s);
             """
 
-    update_values(query, values)
+    insert_values(query, values)
 
     logging.info(f'Took {time2-time1:.2f} s')
     logging.info(pd.Series(out).value_counts())
