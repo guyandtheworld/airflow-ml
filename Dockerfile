@@ -87,9 +87,9 @@ RUN set -ex \
 COPY requirements.txt ${AIRFLOW_USER_HOME}/requirements.txt
 RUN pip install -r ${AIRFLOW_USER_HOME}/requirements.txt
 
-RUN wget https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz
-RUN pip install en_core_web_sm-2.2.0.tar.gz
-RUN rm en_core_web_sm-2.2.0.tar.gz
+RUN wget https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-2.2.0/en_core_web_lg-2.2.0.tar.gz
+RUN pip install en_core_web_lg-2.2.0.tar.gz
+RUN rm en_core_web_lg-2.2.0.tar.gz
 
 COPY script/entrypoint.sh /entrypoint.sh
 

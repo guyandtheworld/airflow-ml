@@ -10,7 +10,7 @@ from datetime import timedelta, datetime
 path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
 sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
 
-from publisher.google_news import publish_google_news
+from publisher.publish_to_source import publish_to_source
 
 
 default_args = {
@@ -32,7 +32,10 @@ dag = DAG(
 
 
 google_news_publisher = PythonOperator(task_id='publish_to_google_news_scraper',
-                                       python_callable=publish_google_news,
+                                       python_callable=publish_to_source,
+                                       op_kwargs={"source": "google_news",
+                                       "source_uuid": "1c74e10b-30fd-4052-9c00-eec0fc0ecdcf",
+                                       "timedelta": 1},
                                        dag=dag)
 
 google_news_publisher

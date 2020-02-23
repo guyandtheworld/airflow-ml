@@ -11,9 +11,9 @@ from datetime import timedelta, datetime
 path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
 sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
 
-from extraction.entity_extraction import extract_entities_from_headlines
-from extraction.sentiment import sentiment_analysis_on_headlines
-from data.mongo_setup import global_init
+from extraction.entity_extraction import entities_from_headlines
+from extraction.sentiment import sentiment_on_headlines
+
 
 default_args = {
     'owner': 'Airflow',
@@ -29,17 +29,17 @@ default_args = {
 
 dag = DAG(
     'headline_processing', default_args=default_args,
-    schedule_interval=timedelta(hours=12),
+    schedule_interval=timedelta(hours=1),
     catchup=False)
 
 
 entity_extraction = PythonOperator(task_id='entity_extraction',
-                                   python_callable=extract_entities_from_headlines,
+                                   python_callable=entities_from_headlines,
                                    dag=dag)
 
 
 sentiment_analysis = PythonOperator(task_id='sentiment_analysis',
-                                    python_callable=sentiment_analysis_on_headlines,
+                                    python_callable=sentiment_on_headlines,
                                     dag=dag)
 
 

@@ -1,16 +1,19 @@
 import concurrent.futures
 import re
+import logging
 import requests
 import time
+import uuid
 import urllib3
 import warnings
 
 import pandas as pd
+
+from data.postgres_utils import connect, insert_values
+from datetime import datetime
 from dragnet import extract_content
 
-from data.article import Article
-from data.title_analytics import TitleAnalytics
-from data.mongo_setup import global_init
+logging.basicConfig(level=logging.INFO)
 
 
 def warn(*args, **kwargs):
@@ -18,7 +21,7 @@ def warn(*args, **kwargs):
 
 
 out = []
-CONNECTIONS = 80
+CONNECTIONS = 100
 TIMEOUT = 5
 
 warnings.warn = warn
@@ -59,40 +62,56 @@ def body_cleaning(text):
 
 
 def gen_text_dragnet(article, timeout):
-    content, status_code = do_request(article["url"])
-    cleaned_content = body_cleaning(content[:500])
-    article.update(body=cleaned_content, status_code=status_code)
-    return status_code
+    content, status_code = do_request(article[1])
+    body = body_cleaning(content[:600])
+    return (article[0], body, status_code)
 
 
 def extract_body():
     """
     Processing broken URLs are a huge pain in the ass
     """
-    global_init()
-    try:
-        articles = Article.objects.filter(
-            status_code__exists=False)[:5000]
-    except Exception as e:
-        print(e)
-        raise
 
-    print("extracting bodies from {} articles".format(len(articles)))
+    # fetch body from articles where status code is null
+    query = """
+               SELECT story.uuid, story.url
+               FROM public.apis_story AS story
+               LEFT JOIN
+               public.apis_storybody AS body
+               ON story.uuid = body."storyID_id"
+               WHERE status_code IS NULL
+               LIMIT 10000;
+            """
 
+    response = connect(query)
+
+    logging.info("extracting bodies from {} articles".format(len(response)))
+
+    values = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=CONNECTIONS) as executor:
         future_to_url = (executor.submit(gen_text_dragnet, article, TIMEOUT)
-                         for article in articles)
+                         for article in response)
         time1 = time.time()
         for future in concurrent.futures.as_completed(future_to_url):
             try:
-                data = future.result()
+                story_uuid, body, status = future.result()
+                values.append((str(uuid.uuid4()), body, status,
+                               str(datetime.now()),  story_uuid))
             except Exception as exc:
-                data = str(type(exc))
+                status = str(type(exc))
             finally:
-                out.append(data)
+                out.append(status)
                 print(str(len(out)), end="\r")
 
         time2 = time.time()
 
-    print(f'Took {time2-time1:.2f} s')
-    print(pd.Series(out).value_counts())
+    query = """
+            INSERT INTO public.apis_storybody
+            (uuid, body, status_code, "entryTime", "storyID_id")
+            VALUES(%s, %s, %s, %s, %s);
+            """
+
+    insert_values(query, values)
+
+    logging.info(f'Took {time2-time1:.2f} s')
+    logging.info(pd.Series(out).value_counts())

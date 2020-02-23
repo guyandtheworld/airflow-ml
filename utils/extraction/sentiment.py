@@ -1,12 +1,15 @@
-from data.article import Article
-from data.title_analytics import TitleAnalytics
-from data.body_analytics import BodyAnalytics
-from data.mongo_setup import global_init
+import json
+import logging
+import uuid
 
-
+from data.postgres_utils import connect, insert_values
+from datetime import datetime
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
+
 analyser = SentimentIntensityAnalyzer()
+
+logging.basicConfig(level=logging.INFO)
 
 
 def get_sentiment(text: str) -> dict:
@@ -28,55 +31,89 @@ def get_first_paragraph(text):
         return text
 
 
-def sentiment_analysis_on_headlines():
+def sentiment_on_headlines():
     """
     runs sentiment analysis on each article
     """
 
-    # setup connection to database
-    global_init()
-    try:
-        articles = Article.objects.filter(
-            title_analytics__vader_sentiment_score={})
-    except Exception as e:
-        print(e)
-        raise
+    # fetch titles of all stories we haven't done
+    # sentiment analysis
+    query = """
+               SELECT story.uuid, title FROM
+               public.apis_story story
+               LEFT JOIN
+               (SELECT * FROM public.apis_storysentiment
+               WHERE is_headline=true) entity
+               ON story.uuid = entity."storyID_id"
+               WHERE sentiment IS NULL
+               LIMIT 10000
+            """
 
-    print("extracting sentiment from {} articles".format(len(articles)))
+    response = connect(query)
+    values = []
+    logging.info("extracting entities from {} articles".format(len(response)))
+
     count = 1
-    for article in articles:
-        sentiment = get_sentiment(article.title)
-        article.update(
-            title_analytics__vader_sentiment_score=sentiment)
+    for story_uuid, headline in response:
+        sentiment = get_sentiment(headline)
+        values.append((str(uuid.uuid4()), True,
+                       json.dumps(sentiment), story_uuid,
+                       str(datetime.now())))
         if not count % 100:
-            print("processed: {}".format(count))
+            logging.info("processed: {}".format(count))
         count += 1
-    print("finished")
+
+    insert_query = """
+                      INSERT INTO public.apis_storysentiment
+                      (uuid, is_headline, sentiment, "storyID_id", "entryTime")
+                      VALUES(%s, %s, %s, %s, %s);
+                   """
+
+    insert_values(insert_query, values)
+    logging.info("finished")
 
 
-def sentiment_analysis_on_body():
+def sentiment_from_body():
     """
     runs sentiment analysis on each article
     """
 
-    # setup connection to database
-    global_init()
-    try:
-        articles = Article.objects.filter(
-            body_analytics__vader_sentiment_score={})
-    except Exception as e:
-        print(e)
-        raise
+    # fetch all stories where body exists and we haven't done
+    # sentiment analysis
+    query = """
+                SELECT story.uuid, body.body FROM
+                public.apis_story story
+                LEFT JOIN
+                (SELECT * FROM public.apis_storysentiment as2
+                WHERE is_headline=false) sentiment
+                ON story.uuid = sentiment."storyID_id"
+                LEFT JOIN
+                public.apis_storybody AS body
+                ON story.uuid = body."storyID_id"
+                WHERE sentiment IS NULL
+                AND body IS NOT NULL
+                LIMIT 10000
+            """
 
-    print("extracting sentiment from {} articles".format(len(articles)))
+    response = connect(query)
+    values = []
+    logging.info("extracting entities from {} articles".format(len(response)))
+
     count = 1
-    for article in articles:
-        first_para = get_first_paragraph(article.body)
-        # running sentiment analysis on first paragraph
-        sentiment = get_sentiment(first_para)
-        article.update(
-            body_analytics__vader_sentiment_score=sentiment)
+    for story_uuid, body in response:
+        sentiment = get_sentiment(body)
+        values.append((str(uuid.uuid4()), False,
+                       json.dumps(sentiment), story_uuid,
+                       str(datetime.now())))
         if not count % 100:
-            print("processed: {}".format(count))
+            logging.info("processed: {}".format(count))
         count += 1
-    print("finished")
+
+    insert_query = """
+                      INSERT INTO public.apis_storysentiment
+                      (uuid, is_headline, sentiment, "storyID_id", "entryTime")
+                      VALUES(%s, %s, %s, %s, %s);
+                   """
+
+    insert_values(insert_query, values)
+    logging.info("finished")
