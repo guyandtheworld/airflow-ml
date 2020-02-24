@@ -1,3 +1,4 @@
+import logging
 import os
 import pickle
 
@@ -7,9 +8,9 @@ from google.cloud.storage import Blob
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 
-MAX_LEN = 100
-BUCKET = "production_models"
+logging.basicConfig(level=logging.INFO)
 
+BUCKET = "production_models"
 
 os.chdir(os.path.dirname(__file__))
 path = os.getcwd()
@@ -21,7 +22,7 @@ def padding(corpus, train=True):
     with open(path, 'rb') as tok:
         tokenizer = pickle.load(tok)
     sequences = tokenizer.texts_to_sequences(corpus)
-    news_pad = pad_sequences(sequences, maxlen=MAX_LEN)
+    news_pad = pad_sequences(sequences, maxlen=100)
     word_index = None
     return news_pad, word_index
 
@@ -31,8 +32,8 @@ def upload_ml_stuff_to_bucket(blob_name, path_to_file):
     upload the model and the helper libraries into
     S3 with proper versioning
     """
-    print("uploading - {}".format(path_to_file))
-    print("uploading to - {}".format(blob_name))
+    logging.info("uploading - {}".format(path_to_file))
+    logging.info("uploading to - {}".format(blob_name))
 
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(BUCKET)
