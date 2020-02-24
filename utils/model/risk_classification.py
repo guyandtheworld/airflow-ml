@@ -15,7 +15,6 @@ from .utils import make_prediction
 os.chdir(os.path.dirname(__file__))
 path = os.getcwd()
 
-
 logging.basicConfig(level=logging.INFO)
 
 
@@ -23,11 +22,31 @@ HELPER_DIRECTORY = "{}/{}".format(path, "helpers")
 BUCKET = "production_models"
 MODEL = "risk_classification_model"
 
+BUCKET_UUID = {
+    "financial_risk": "2fa858cf-f8c3-4fe8-bd02-ae66aae2b909",
+    "cyber_crime": "126c6022-96a0-4769-a607-905cec0a7d46",
+    "other": "ee3406eb-7302-46c0-a60f-80f3fc603cda"}
+
 
 def load_model_utils():
     """
     download once and load when running from production
     """
+
+    query = """
+    select am.uuid, storage_link from apis_modeldetail am
+    left join
+    apis_scenario scr
+    on am."scenarioID_id" = scr.uuid
+    where scr."name" = 'Risk' and
+    "version" = (
+    select max("version") from apis_modeldetail am
+    left join
+    apis_scenario scr
+    on am."scenarioID_id" = scr.uuid
+    where scr."name" = 'Risk')
+    """
+
     nltk.download('punkt')
     nltk.download('stopwords')
 
@@ -80,13 +99,16 @@ def load_data():
 
     # fetch articles which we haven't scored yet
     query = """
-            select uuid, title, published_date, "domain"
+            select as2.uuid, title, published_date, src.uuid as sourceUUID
             from public.apis_story as2
             left join
             (SELECT distinct "storyID_id"
             FROM public.apis_bucketscore) ab
             on as2.uuid = ab."storyID_id"
-            limit 50;
+            left join
+            public.apis_source as src
+            on src."name" = as2."domain"
+            where ab."storyID_id" is null
             """
 
     articles = connect(query)
@@ -122,6 +144,16 @@ def log_metrics():
     * connect predictions to bucket
     * fetch UUIDs and connect to prediction
     """
+
+    query = """
+    select ab.uuid, model_label
+    from apis_bucket ab
+    left join
+    apis_scenario scr
+    on ab."scenarioID_id" = scr.uuid
+    where scr."name" = 'Risk'
+    """
+
     try:
         df = pd.read_csv("{}/results.csv".format(HELPER_DIRECTORY))
     except FileNotFoundError as e:
