@@ -1,10 +1,7 @@
-import json
 import logging
 import nltk
 import os
 import uuid
-import urllib
-import urllib.request
 
 import pandas as pd
 
@@ -22,12 +19,9 @@ HELPER_DIRECTORY = "{}/{}".format(path, "helpers")
 
 logging.basicConfig(level=logging.INFO)
 
-BUCKET = "production_models"
-MODEL = "risk_classification_model"
-
 
 MODEL_QUERY = """
-    select am.uuid, storage_link from apis_modeldetail am
+    select am.uuid, bucket, storage_link from apis_modeldetail am
     left join
     apis_scenario scr
     on am."scenarioID_id" = scr.uuid
@@ -57,19 +51,16 @@ def load_model_utils():
     # fetch the latest model name from db
 
     results = connect(MODEL_QUERY)
-    model_path = results[0][1]
+    bucket = results[0][1]
+    model_path = results[0][2]
 
     path = os.path.isfile("{}/{}".format(HELPER_DIRECTORY, "risk_model_v1.h5"))
     if not path:
-        prefix = "{}/models".format(MODEL)
-        blobs = storage_client.list_blobs(BUCKET, prefix=prefix)
-        for blob in blobs:
-            pass
-
         logging.info("downloading the model")
-        bucket = storage_client.get_bucket(BUCKET)
-        blob = bucket.blob("{}/risk_model_v1.h5".format(prefix))
-        blob.download_to_filename(path)
+        bucket = storage_client.get_bucket(bucket)
+        blob = bucket.blob("{}/risk_model_v1.h5".format(model_path))
+        blob.download_to_filename(
+            "{}/{}".format(HELPER_DIRECTORY, "risk_model_v1.h5"))
     else:
         # check if model new version exist
         logging.info("model exists")
@@ -77,11 +68,11 @@ def load_model_utils():
     path = os.path.isfile("{}/{}".format(HELPER_DIRECTORY, "tokenizer.pickle"))
     if not path:
         # download tokenizer.pickle
-        prefix = "{}".format(MODEL)
         logging.info("downloading the tokenizer")
-        bucket = storage_client.get_bucket(BUCKET)
-        blob = bucket.blob("{}/tokenizer.pickle".format(prefix))
-        blob.download_to_filename(path)
+        bucket = storage_client.get_bucket(bucket)
+        blob = bucket.blob("{}/tokenizer.pickle".format(model_path))
+        blob.download_to_filename(
+            "{}/{}".format(HELPER_DIRECTORY, "tokenizer.pickle"))
     else:
         logging.info("tokenizer exists")
 
@@ -178,11 +169,18 @@ def log_metrics():
     for _, row in df.iterrows():
         log_row = {}
         for bucket in bucket_ids.keys():
-            log_row["bucketUUID"] = str(uuid.uuid4())
+            log_row["uuid"] = str(uuid.uuid4())
+            log_row["storyID_id"] = row["uuid"]
             log_row["entryTime"] = str(datetime.now())
-            log_row["storyUUID"] = row["uuid"]
-            log_row["storyDate"] = row["published_date"]
-            log_row["sourceUUID"] = row["sourceUUID"]
-            log_row["bucketUUID"] = bucket_ids[bucket]
-            log_row["modelUUID"] = model_uuid
             log_row["grossScore"] = row[bucket]
+            log_row["bucketID_id"] = bucket_ids[bucket]
+            log_row["modelID_id"] = model_uuid
+            log_row["sourceID_id"] = row["sourceUUID"]
+            log_row["storyDate"] = row["published_date"]
+
+    insert_query = """
+    INSERT INTO public.apis_bucketscore
+    (uuid, "storyID_id", "entryTime", "grossScore",
+    "bucketID_id", "modelID_id", "sourceID_id", "storyDate")
+    VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s);
+    """
