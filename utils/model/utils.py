@@ -59,13 +59,30 @@ def upload_version_model(model=False):
     upload_ml_stuff_to_bucket(blob_name, path)
 
 
+def make_boolean(results: dict) -> dict:
+    """
+    convert probability to boolean
+    """
+    bool_res = {}
+    maximum = max(results, key=results.get)
+    for k in results.keys():
+        if k == maximum:
+            bool_res[k] = 1
+        else:
+            bool_res[k] = 0
+    return bool_res
+
+
 def make_prediction(model, test: str):
+    """
+    make predictions using the model
+    """
     if isinstance(test, str):
         test = padding(list([test]), False)[0]
         y_pre = model.predict(test)[0]
-        result_dict = {'financial_risk': y_pre[0],
+        result_dict = {'financial_crime': y_pre[0],
                        'cyber_crime': y_pre[1], 'other': y_pre[2]}
-        return result_dict
+        return make_boolean(result_dict)
     else:
-        return {'financial_risk': 0,
+        return {'financial_crime': 0,
                 'cyber_crime': 0, 'other': 1}

@@ -8,7 +8,6 @@ from pathlib import Path
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta, datetime
-from urllib.parse import urlparse
 
 path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
 sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
@@ -38,9 +37,7 @@ dag = DAG(
 
 def index_source():
     """
-    * fetch values
-    * get names
-    * insert the sets that are not in the db with uuid
+    index new domains into our source table
     """
 
     query = """
