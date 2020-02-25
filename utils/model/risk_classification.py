@@ -96,7 +96,7 @@ def load_data():
             on src."name" = as2."domain"
             where ab."storyID_id" is null
             and src.uuid is not null
-            limit 100
+            limit 5000
             """
 
     articles = connect(query)
@@ -167,20 +167,22 @@ def log_metrics():
 
     values = []
     for _, row in df.iterrows():
-        log_row = {}
         for bucket in bucket_ids.keys():
-            log_row["uuid"] = str(uuid.uuid4())
-            log_row["storyID_id"] = row["uuid"]
-            log_row["entryTime"] = str(datetime.now())
-            log_row["grossScore"] = row[bucket]
-            log_row["bucketID_id"] = bucket_ids[bucket]
-            log_row["modelID_id"] = model_uuid
-            log_row["sourceID_id"] = row["sourceUUID"]
-            log_row["storyDate"] = row["published_date"]
+            log_row = (str(uuid.uuid4()),
+                       row["uuid"],
+                       str(datetime.now()),
+                       row[bucket],
+                       bucket_ids[bucket],
+                       model_uuid,
+                       row["sourceUUID"],
+                       row["published_date"])
+            values.append(log_row)
 
     insert_query = """
     INSERT INTO public.apis_bucketscore
     (uuid, "storyID_id", "entryTime", "grossScore",
     "bucketID_id", "modelID_id", "sourceID_id", "storyDate")
-    VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s);
+    VALUES(%s, %s, %s, %s, %s, %s, %s, %s);
     """
+
+    insert_values(insert_query, values)
