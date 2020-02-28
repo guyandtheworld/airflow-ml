@@ -31,7 +31,7 @@ default_args = {
 
 dag = DAG(
     'source_indexing', default_args=default_args,
-    schedule_interval=timedelta(hours=1),
+    schedule_interval=timedelta(hours=2),
     catchup=False)
 
 

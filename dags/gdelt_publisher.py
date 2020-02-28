@@ -34,8 +34,8 @@ dag = DAG(
 gdelt_publisher = PythonOperator(task_id='publish_to_gdelt_news_scraper',
                                  python_callable=publish_to_source,
                                  op_kwargs={"source": "gdelt",
-                                 "source_uuid": "93d7f1d2-cb5a-4372-a255-50114765cd03",
-                                 "timedelta": 9},
+                                            "source_uuid": "93d7f1d2-cb5a-4372-a255-50114765cd03",
+                                            "timedelta": 9},
                                  dag=dag)
 
 gdelt_publisher
