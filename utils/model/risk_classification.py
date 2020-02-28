@@ -1,6 +1,7 @@
 import logging
 import nltk
 import os
+import time
 import uuid
 
 import pandas as pd
@@ -35,7 +36,7 @@ MODEL_QUERY = """
     """
 
 
-def load_model_utils():
+def risk_classification():
     """
     download once and load when running from production
     """
@@ -51,6 +52,11 @@ def load_model_utils():
     # fetch the latest model name from db
 
     results = connect(MODEL_QUERY)
+
+    if len(results) == 0:
+        return
+
+    model_uuid = results[0][0]
     bucket = results[0][1]
     model_path = results[0][2]
 
@@ -76,47 +82,35 @@ def load_model_utils():
     else:
         logging.info("tokenizer exists")
 
-
-def load_data():
-    """
-    load data
-    """
-
-    # fetch articles which we haven't scored yet
+    # fetch articles which we haven't scored
+    # using our current model yet
     query = """
             select as2.uuid, title, published_date,
-            src.uuid as sourceUUID
+            src.uuid as sourceUUID,
+            "entityID_id" as entityUUID
             from public.apis_story as2
             left join
             (SELECT distinct "storyID_id"
-            FROM public.apis_bucketscore) ab
+            FROM public.apis_bucketscore
+            where "modelID_id" = '{}') ab
             on as2.uuid = ab."storyID_id"
             left join
             public.apis_source as src
             on src."name" = as2."domain"
             where ab."storyID_id" is null
             and src.uuid is not null
-            limit 5000
-            """
+            limit 500
+            """.format(model_uuid)
 
     articles = connect(query)
 
     df = pd.DataFrame(articles, columns=[
-                      "uuid", "title", "published_date", "sourceUUID"])
-    logging.info("writing {} articles for preprocessing".format(df.shape[0]))
-    df.to_csv("{}/articles.csv".format(HELPER_DIRECTORY), index=False)
+                      "uuid", "title", "published_date",
+                      "sourceUUID", "entityUUID"])
 
-
-def predict_scores():
-    """
-    loads model locally and makes prediction
-    """
+    # loads model locally and makes prediction
     # fetch latest model name from db and load it
-    try:
-        df = pd.read_csv("{}/articles.csv".format(HELPER_DIRECTORY))
-    except FileNotFoundError as e:
-        logging.info("article.csv doesn't exist: {}".format(e))
-        return
+    time1 = time.time()
 
     logging.info("making prediction on {} items".format(df.shape[0]))
     model = load_model("{}/risk_model_v1.h5".format(HELPER_DIRECTORY))
@@ -130,16 +124,11 @@ def predict_scores():
 
     df.drop('predictions', axis=1, inplace=True)
 
-    logging.info("writing {} articles for logging".format(df.shape[0]))
-    df.to_csv("{}/results.csv".format(HELPER_DIRECTORY), index=False)
-    os.remove("{}/articles.csv".format(HELPER_DIRECTORY))
+    time2 = time.time()
+    logging.info(f'Took {time2-time1:.2f} s')
 
-
-def log_metrics():
-    """
-    * connect predictions to bucket
-    * fetch UUIDs and connect to prediction
-    """
+    # connect predictions to bucket
+    # fetch UUIDs and connect to prediction
 
     query = """
     select ab.uuid, model_label
@@ -156,33 +145,52 @@ def log_metrics():
     for result in results:
         bucket_ids[result[1]] = result[0]
 
-    try:
-        df = pd.read_csv("{}/results.csv".format(HELPER_DIRECTORY))
-    except FileNotFoundError as e:
-        logging.info("results.csv doesn't exist : {}".format(e))
-        return
-
-    response = connect(MODEL_QUERY)
-    model_uuid = response[0][0]
-
     values = []
     for _, row in df.iterrows():
         for bucket in bucket_ids.keys():
-            log_row = (str(uuid.uuid4()),
-                       row["uuid"],
-                       str(datetime.now()),
-                       row[bucket],
-                       bucket_ids[bucket],
-                       model_uuid,
-                       row["sourceUUID"],
-                       row["published_date"])
-            values.append(log_row)
+            # log only the classified value
+            if row[bucket] == 1:
+                log_row = (str(uuid.uuid4()),
+                           row["uuid"],
+                           str(datetime.now()),
+                           row[bucket],
+                           bucket_ids[bucket],
+                           model_uuid,
+                           row["sourceUUID"],
+                           row["published_date"])
+                values.append(log_row)
 
+    logging.info("writing {} articles into bucket scores".format(df.shape[0]))
     insert_query = """
     INSERT INTO public.apis_bucketscore
     (uuid, "storyID_id", "entryTime", "grossScore",
     "bucketID_id", "modelID_id", "sourceID_id", "storyDate")
     VALUES(%s, %s, %s, %s, %s, %s, %s, %s);
+    """
+    insert_values(insert_query, values)
+
+    # scoring all the entities
+    logging.info("writing {} articles into entity scores".format(df.shape[0]))
+    values = []
+    for _, row in df.iterrows():
+        for bucket in bucket_ids.keys():
+            if row[bucket] == 1:
+                log_row = (str(uuid.uuid4()),
+                           row["uuid"],
+                           row[bucket],
+                           bucket_ids[bucket],
+                           row["entityUUID"],
+                           model_uuid,
+                           row["sourceUUID"],
+                           str(datetime.now())
+                           )
+                values.append(log_row)
+
+    insert_query = """
+        INSERT INTO public.apis_entityscore
+        (uuid, "storyID_id", "grossScore", "bucketID_id",
+        "entityID_id", "modelID_id", "sourceID_id", "entryTime")
+        VALUES(%s, %s, %s, %s, %s, %s, %s, %s);
     """
 
     insert_values(insert_query, values)

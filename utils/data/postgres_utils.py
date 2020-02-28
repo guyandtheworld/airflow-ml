@@ -17,6 +17,7 @@ params = {
 def connect(query='SELECT version()'):
     """ Connect to the PostgreSQL database server """
     conn = None
+    results = []
     try:
         # read connection parameters
 

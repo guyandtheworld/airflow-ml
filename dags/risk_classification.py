@@ -11,8 +11,7 @@ from datetime import timedelta, datetime
 path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
 sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
 
-from model.risk_classification import load_model_utils, load_data, \
-    predict_scores, log_metrics
+from model.risk_classification import risk_classification
 
 
 default_args = {
@@ -33,21 +32,8 @@ dag = DAG(
     catchup=False)
 
 
-load_model_utils = PythonOperator(task_id='load_model_utils',
-                                  python_callable=load_model_utils,
-                                  dag=dag)
+risk_classification = PythonOperator(task_id='risk_classification',
+                                     python_callable=risk_classification,
+                                     dag=dag)
 
-load_data = PythonOperator(task_id='load_data',
-                           python_callable=load_data,
-                           dag=dag)
-
-predict_scores = PythonOperator(task_id='predict_scores',
-                                python_callable=predict_scores,
-                                dag=dag)
-
-log_metrics = PythonOperator(task_id='log_metrics',
-                             python_callable=log_metrics,
-                             dag=dag)
-
-
-load_model_utils >> load_data >> predict_scores >> log_metrics
+risk_classification
