@@ -81,13 +81,6 @@ def publish():
     return RESULT
 
 
-def publish_for_extraction():
-    """
-    index new domains into our source table
-    """
-    pass
-
-
 publish_task = PythonOperator(task_id='publish',
                               python_callable=publish,
                               dag=dag)

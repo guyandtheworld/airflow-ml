@@ -46,7 +46,7 @@ def sentiment_on_headlines():
                WHERE is_headline=true) entity
                ON story.uuid = entity."storyID_id"
                WHERE sentiment IS NULL
-               LIMIT 10000
+               LIMIT 50000
             """
 
     response = connect(query)
@@ -92,7 +92,7 @@ def sentiment_from_body():
                 ON story.uuid = body."storyID_id"
                 WHERE sentiment IS NULL
                 AND body IS NOT NULL
-                LIMIT 10000
+                LIMIT 50000
             """
 
     response = connect(query)

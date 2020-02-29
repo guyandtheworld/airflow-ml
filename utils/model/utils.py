@@ -78,8 +78,10 @@ def make_prediction(model, test: str):
     make predictions using the model
     """
     if isinstance(test, str):
+        print(test, end="\r")
         test = padding(list([test]), False)[0]
         y_pre = model.predict(test)[0]
+
         result_dict = {'financial_crime': y_pre[0],
                        'cyber_crime': y_pre[1], 'other': y_pre[2]}
         return make_boolean(result_dict)

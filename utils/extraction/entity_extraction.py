@@ -54,7 +54,7 @@ def entities_from_headlines():
                 where is_headline=true) entity
                 on story.uuid = entity."storyID_id"
                 where entities is null
-                LIMIT 10000
+                LIMIT 50000
             """
 
     response = connect(query)
@@ -102,7 +102,7 @@ def entities_from_body():
                 ON story.uuid = body."storyID_id"
                 WHERE entities IS NULL
                 AND body IS NOT NULL
-                LIMIT 10000
+                LIMIT 50000
             """
 
     response = connect(query)

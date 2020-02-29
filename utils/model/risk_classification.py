@@ -22,7 +22,8 @@ logging.basicConfig(level=logging.INFO)
 
 
 MODEL_QUERY = """
-    select am.uuid, bucket, storage_link from apis_modeldetail am
+    select am.uuid, bucket, storage_link
+    from apis_modeldetail am
     left join
     apis_scenario scr
     on am."scenarioID_id" = scr.uuid
@@ -99,7 +100,7 @@ def risk_classification():
             on src."name" = as2."domain"
             where ab."storyID_id" is null
             and src.uuid is not null
-            limit 500
+            limit 50000
             """.format(model_uuid)
 
     articles = connect(query)
