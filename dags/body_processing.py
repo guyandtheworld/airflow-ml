@@ -13,7 +13,6 @@ sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
 
 from extraction.entity_extraction import entities_from_body
 from extraction.sentiment import sentiment_from_body
-from extraction.body_extraction import extract_body
 
 
 default_args = {
@@ -34,11 +33,6 @@ dag = DAG(
     catchup=False)
 
 
-body_extraction = PythonOperator(task_id='body_extraction',
-                                 python_callable=extract_body,
-                                 dag=dag)
-
-
 entity_extraction = PythonOperator(task_id='entity_extraction',
                                    python_callable=entities_from_body,
                                    dag=dag)
@@ -49,4 +43,4 @@ sentiment_analysis = PythonOperator(task_id='sentiment_analysis',
                                     dag=dag)
 
 
-body_extraction >> entity_extraction >> sentiment_analysis
+entity_extraction >> sentiment_analysis
