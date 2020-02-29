@@ -3,6 +3,7 @@ import nltk
 import os
 import time
 import uuid
+import shutil
 
 import pandas as pd
 
@@ -22,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 MODEL_QUERY = """
-    select am.uuid, bucket, storage_link
+    select am.uuid, bucket, storage_link, am."name"
     from apis_modeldetail am
     left join
     apis_scenario scr
@@ -60,14 +61,18 @@ def risk_classification():
     model_uuid = results[0][0]
     bucket = results[0][1]
     model_path = results[0][2]
+    model_name = results[0][3]
 
-    path = os.path.isfile("{}/{}".format(HELPER_DIRECTORY, "risk_model_v1.h5"))
+    logging.info("{}/{}".format(model_path, model_name))
+    path = os.path.isfile("{}/{}".format(HELPER_DIRECTORY, model_name))
     if not path:
+        shutil.rmtree("{}/".format(HELPER_DIRECTORY))
+        os.makedirs(HELPER_DIRECTORY)
         logging.info("downloading the model")
         bucket = storage_client.get_bucket(bucket)
-        blob = bucket.blob("{}/risk_model_v1.h5".format(model_path))
+        blob = bucket.blob("{}/{}".format(model_path, model_name))
         blob.download_to_filename(
-            "{}/{}".format(HELPER_DIRECTORY, "risk_model_v1.h5"))
+            "{}/{}".format(HELPER_DIRECTORY, model_name))
     else:
         # check if model new version exist
         logging.info("model exists")
@@ -114,7 +119,7 @@ def risk_classification():
     time1 = time.time()
 
     logging.info("making prediction on {} items".format(df.shape[0]))
-    model = load_model("{}/risk_model_v1.h5".format(HELPER_DIRECTORY))
+    model = load_model("{}/{}".format(HELPER_DIRECTORY, model_name))
 
     df['predictions'] = df['title'].apply(lambda x: make_prediction(model, x))
 
