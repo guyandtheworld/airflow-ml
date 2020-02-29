@@ -121,7 +121,17 @@ def risk_classification():
     logging.info("making prediction on {} items".format(df.shape[0]))
     model = load_model("{}/{}".format(HELPER_DIRECTORY, model_name))
 
-    df['predictions'] = df['title'].apply(lambda x: make_prediction(model, x))
+    count = 1
+    predictions = []
+    for _, row in df.iterrows():
+        prediction = make_prediction(model, row['title'])
+        predictions.append(prediction)
+        count += 1
+        if count % 100 == 0:
+            logging.info(
+                "processed: {}/{} articles".format(count, df.shape[0]))
+
+    df['predictions'] = predictions
 
     df['financial_crime'] = df['predictions'].apply(
         lambda x: x['financial_crime'])

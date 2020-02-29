@@ -78,7 +78,6 @@ def make_prediction(model, test: str):
     make predictions using the model
     """
     if isinstance(test, str):
-        print(test, end="\r")
         test = padding(list([test]), False)[0]
         y_pre = model.predict(test)[0]
 
