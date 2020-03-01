@@ -28,7 +28,7 @@ default_args = {
 
 dag = DAG(
     'risk_classification', default_args=default_args,
-    schedule_interval=timedelta(hours=2),
+    schedule_interval=timedelta(hours=1),
     catchup=False)
 
 
