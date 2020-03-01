@@ -67,7 +67,7 @@ def make_boolean(results: dict) -> dict:
     maximum = max(results, key=results.get)
     for k in results.keys():
         if k == maximum:
-            bool_res[k] = 1
+            bool_res[k] = results[k]
         else:
             bool_res[k] = 0
     return bool_res
@@ -83,7 +83,7 @@ def make_prediction(model, test: str):
 
         result_dict = {'financial_crime': y_pre[0],
                        'cyber_crime': y_pre[1], 'other': y_pre[2]}
-        return make_boolean(result_dict)
+        return result_dict
     else:
         return {'financial_crime': 0,
                 'cyber_crime': 0, 'other': 1}

@@ -23,17 +23,13 @@ logging.basicConfig(level=logging.INFO)
 
 
 MODEL_QUERY = """
-    select am.uuid, bucket, storage_link, am."name"
-    from apis_modeldetail am
+    select am.uuid, bucket, storage_link, am."name" from apis_modeldetail am
     left join
-    apis_scenario scr
-    on am."scenarioID_id" = scr.uuid
+    apis_scenario scr on am."scenarioID_id" = scr.uuid
     where scr."name" = 'Risk' and
-    "version" = (
-    select max("version") from apis_modeldetail am
+    "version" = (select max("version") from apis_modeldetail am
     left join
-    apis_scenario scr
-    on am."scenarioID_id" = scr.uuid
+    apis_scenario scr on am."scenarioID_id" = scr.uuid
     where scr."name" = 'Risk')
     """
 
@@ -91,21 +87,15 @@ def risk_classification():
     # fetch articles which we haven't scored
     # using our current model yet
     query = """
-            select as2.uuid, title, published_date,
-            src.uuid as sourceUUID,
-            "entityID_id" as entityUUID
-            from public.apis_story as2
+            select as2.uuid, title, published_date, src.uuid as sourceUUID,
+            "entityID_id" as entityUUID from public.apis_story as2
             left join
-            (SELECT distinct "storyID_id"
-            FROM public.apis_bucketscore
-            where "modelID_id" = '{}') ab
-            on as2.uuid = ab."storyID_id"
+            (SELECT distinct "storyID_id" FROM public.apis_bucketscore
+            where "modelID_id" = '{}') ab on as2.uuid = ab."storyID_id"
             left join
-            public.apis_source as src
-            on src."name" = as2."domain"
-            where ab."storyID_id" is null
-            and src.uuid is not null
-            limit 50000
+            public.apis_source as src on src."name" = as2."domain"
+            where ab."storyID_id" is null and src.uuid is not null
+            limit 10000
             """.format(model_uuid)
 
     articles = connect(query)
@@ -147,11 +137,8 @@ def risk_classification():
     # fetch UUIDs and connect to prediction
 
     query = """
-    select ab.uuid, model_label
-    from apis_bucket ab
-    left join
-    apis_scenario scr
-    on ab."scenarioID_id" = scr.uuid
+    select ab.uuid, model_label from apis_bucket ab
+    left join apis_scenario scr on ab."scenarioID_id" = scr.uuid
     where scr."name" = 'Risk'
     """
 
@@ -164,17 +151,15 @@ def risk_classification():
     values = []
     for _, row in df.iterrows():
         for bucket in bucket_ids.keys():
-            # log only the classified value
-            if row[bucket] == 1:
-                log_row = (str(uuid.uuid4()),
-                           row["uuid"],
-                           str(datetime.now()),
-                           row[bucket],
-                           bucket_ids[bucket],
-                           model_uuid,
-                           row["sourceUUID"],
-                           row["published_date"])
-                values.append(log_row)
+            log_row = (str(uuid.uuid4()),
+                       row["uuid"],
+                       str(datetime.now()),
+                       row[bucket],
+                       bucket_ids[bucket],
+                       model_uuid,
+                       row["sourceUUID"],
+                       row["published_date"])
+            values.append(log_row)
 
     logging.info("writing {} articles into bucket scores".format(df.shape[0]))
     insert_query = """
@@ -190,17 +175,16 @@ def risk_classification():
     values = []
     for _, row in df.iterrows():
         for bucket in bucket_ids.keys():
-            if row[bucket] == 1:
-                log_row = (str(uuid.uuid4()),
-                           row["uuid"],
-                           row[bucket],
-                           bucket_ids[bucket],
-                           row["entityUUID"],
-                           model_uuid,
-                           row["sourceUUID"],
-                           str(datetime.now())
-                           )
-                values.append(log_row)
+            log_row = (str(uuid.uuid4()),
+                       row["uuid"],
+                       row[bucket],
+                       bucket_ids[bucket],
+                       row["entityUUID"],
+                       model_uuid,
+                       row["sourceUUID"],
+                       str(datetime.now())
+                       )
+            values.append(log_row)
 
     insert_query = """
         INSERT INTO public.apis_entityscore

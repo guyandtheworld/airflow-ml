@@ -5,7 +5,6 @@ dragnet==2.0.4
 dnspython==1.16.0
 google-cloud-storage==1.23.0
 google-cloud-pubsub==1.2.0
-kaggle==1.5.6
 nltk
 psycopg2-binary==2.8.4
 python-dateutil==2.8.1
