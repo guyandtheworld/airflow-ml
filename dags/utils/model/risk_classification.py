@@ -7,7 +7,7 @@ import shutil
 
 import pandas as pd
 
-from data.postgres_utils import connect, insert_values
+from utils.data.postgres_utils import connect, insert_values
 from datetime import datetime
 from google.cloud import storage
 from tensorflow.keras.models import load_model

@@ -1,18 +1,11 @@
-import os
-import sys
 import logging
 import uuid
-
-from pathlib import Path
 
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta, datetime
 
-path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
-sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
-
-from data.postgres_utils import connect, insert_values
+from utils.data.postgres_utils import connect, insert_values
 
 logging.basicConfig(level=logging.INFO)
 

@@ -1,17 +1,8 @@
-import os
-import sys
-
-from pathlib import Path
-
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta, datetime
 
-
-path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
-sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
-
-from model.risk_classification import risk_classification
+from utils.model.risk_classification import risk_classification
 
 
 default_args = {
@@ -28,7 +19,7 @@ default_args = {
 
 dag = DAG(
     'risk_classification', default_args=default_args,
-    schedule_interval=timedelta(hours=1),
+    schedule_interval=timedelta(hours=2),
     catchup=False)
 
 

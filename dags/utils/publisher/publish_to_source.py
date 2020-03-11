@@ -5,7 +5,7 @@ import pandas as pd
 
 from datetime import timedelta, datetime
 from .publisher import publish
-from data.postgres_utils import connect, insert_values
+from utils.data.postgres_utils import connect, insert_values
 
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"

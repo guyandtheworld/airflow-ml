@@ -1,18 +1,9 @@
-import os
-import sys
-
-from pathlib import Path
-
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta, datetime
 
-
-path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
-sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
-
-from extraction.entity_extraction import entities_from_headlines
-from extraction.sentiment import sentiment_on_headlines
+from utils.extraction.entity_extraction import entities_from_headlines
+from utils.extraction.sentiment import sentiment_on_headlines
 
 
 default_args = {

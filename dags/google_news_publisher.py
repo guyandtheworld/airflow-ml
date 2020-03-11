@@ -1,16 +1,8 @@
-import os
-import sys
-
-from pathlib import Path
-
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta, datetime
 
-path = Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
-sys.path.insert(0, "{}/utils".format(path.parent))  # noqa
-
-from publisher.publish_to_source import publish_to_source
+from utils.publisher.publish_to_source import publish_to_source
 
 
 default_args = {

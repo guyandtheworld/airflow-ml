@@ -6,7 +6,7 @@ import en_core_web_sm
 
 from collections import defaultdict
 from datetime import datetime
-from data.postgres_utils import connect, insert_values
+from utils.data.postgres_utils import connect, insert_values
 
 
 nlp = en_core_web_sm.load()
@@ -54,7 +54,7 @@ def entities_from_headlines():
                 where is_headline=true) entity
                 on story.uuid = entity."storyID_id"
                 where entities is null
-                LIMIT 50000
+                LIMIT 20000
             """
 
     response = connect(query)
@@ -102,7 +102,7 @@ def entities_from_body():
                 ON story.uuid = body."storyID_id"
                 WHERE entities IS NULL
                 AND body IS NOT NULL
-                LIMIT 50000
+                LIMIT 20000
             """
 
     response = connect(query)
