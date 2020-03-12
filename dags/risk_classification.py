@@ -20,7 +20,7 @@ default_args = {
 dag = DAG(
     'risk_classification', default_args=default_args,
     schedule_interval=timedelta(hours=2),
-    catchup=False)
+    catchup=False, max_active_runs=1)
 
 
 risk_classification = PythonOperator(task_id='risk_classification',

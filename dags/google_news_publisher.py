@@ -20,7 +20,7 @@ default_args = {
 dag = DAG(
     'google_news_publisher', default_args=default_args,
     schedule_interval=timedelta(hours=1),
-    catchup=False)
+    catchup=False, max_active_runs=1)
 
 
 google_news_publisher = PythonOperator(task_id='publish_to_google_news_scraper',

@@ -20,7 +20,7 @@ default_args = {
 dag = DAG(
     'gdelt_publisher', default_args=default_args,
     schedule_interval=timedelta(hours=9),
-    catchup=False)
+    catchup=False, max_active_runs=1)
 
 
 gdelt_publisher = PythonOperator(task_id='publish_to_gdelt_news_scraper',

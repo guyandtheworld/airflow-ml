@@ -21,7 +21,7 @@ default_args = {
 dag = DAG(
     'body_processing', default_args=default_args,
     schedule_interval=timedelta(hours=2),
-    catchup=False)
+    catchup=False, max_active_runs=1)
 
 
 entity_extraction = PythonOperator(task_id='entity_extraction',

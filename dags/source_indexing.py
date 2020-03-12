@@ -25,7 +25,7 @@ default_args = {
 dag = DAG(
     'source_indexing', default_args=default_args,
     schedule_interval=timedelta(hours=2),
-    catchup=False)
+    catchup=False, max_active_runs=1)
 
 
 def index_source():

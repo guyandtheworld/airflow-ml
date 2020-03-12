@@ -30,7 +30,7 @@ default_args = {
 dag = DAG(
     'body_extraction', default_args=default_args,
     schedule_interval=timedelta(hours=2),
-    catchup=False)
+    catchup=False, max_active_runs=1)
 
 
 def get_callback(api_future, data, ref):
