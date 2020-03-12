@@ -1,5 +1,5 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-f', 'Dockerfile', '-t', 'gcr.io/$PROJECT_ID/alrtflow']
+  args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/alrtflow', '.']
 images:
 - 'gcr.io/$PROJECT_ID/alrtflow'

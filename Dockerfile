@@ -97,7 +97,6 @@ RUN touch __init__.py
 
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 COPY .keys ${AIRFLOW_USER_HOME}/.keys
-COPY dags ${AIRFLOW_USER_HOME}/dags
 
 RUN chown -R airflow: ${AIRFLOW_USER_HOME}
 
