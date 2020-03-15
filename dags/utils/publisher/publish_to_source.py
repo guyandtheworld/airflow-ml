@@ -27,7 +27,7 @@ def get_last_tracked(row, source):
             on ls."scrapeSourceID_id"=ss.uuid)
             where name = '{}' and
             ls."entityID_id" = '{}') fp
-            """.format(source, row["uuid"])
+            """.format(source, row["entity_id"])
 
     results = connect(query)
 
@@ -53,7 +53,7 @@ def publish_to_source(**kwargs):
     # and with alias given so that we can scrape it
     query = """
                 select entity.uuid, entity.name as legal_name,
-                alias.name as alias, scenario."trackingDays" from
+                alias.name as alias, "scenarioID_id", scenario."trackingDays" from
                 public.apis_entity entity
                 left join
                 public.apis_scenario scenario
@@ -67,8 +67,8 @@ def publish_to_source(**kwargs):
     results = connect(query)
 
     df = pd.DataFrame(results, columns=[
-                      "uuid", "name", "alias", "trackingDays"])
-    df = df.groupby(['uuid', 'name', 'trackingDays'])['alias'].apply(list) \
+                      "entity_id", "name", "alias", "scenario_id", "trackingDays"])
+    df = df.groupby(['entity_id', 'name', 'scenario_id', 'trackingDays'])['alias'].apply(list) \
         .reset_index()
 
     df = df.apply(lambda x: get_last_tracked(x, SOURCE), axis=1)
@@ -76,9 +76,10 @@ def publish_to_source(**kwargs):
     items_to_insert = []
     for _, row in df.iterrows():
         params = {}
-        params["id"] = row["uuid"]
-        params["company_name"] = row["name"]
+        params["entity_id"] = row["entity_id"]
+        params["entity_name"] = row["name"]
         params["common_names"] = row["alias"]
+        params["scenario_id"] = row["scenario_id"]
         params["source"] = [SOURCE]
         params["storage_bucket"] = BUCKET_NAME
         params["history_processed"] = row["history_processed"]
@@ -110,6 +111,6 @@ def publish_to_source(**kwargs):
         # if succeeded in publishing update company status & date
         if success:
             items_to_insert.append((str(uuid.uuid4()), str(date_to),
-                                    params["id"], SOURCE_UUID,))
+                                    params["entity_id"], SOURCE_UUID,))
 
     insert_values(INSERT_QUERY, items_to_insert)

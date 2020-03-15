@@ -116,7 +116,8 @@ def get_model_details():
 def get_scenario_articles(model_uuid):
     """
     Fetch articles which we haven't scored
-    using our current model yet
+    using our current model yet which belongs
+    to our risk scenario
     """
     query = """
             select as2.uuid, title, published_date, src.uuid as sourceUUID,
@@ -126,8 +127,11 @@ def get_scenario_articles(model_uuid):
             where "modelID_id" = '{}') ab on as2.uuid = ab."storyID_id"
             left join
             public.apis_source as src on src."name" = as2."domain"
-            where ab."storyID_id" is null and src.uuid is not null
-            limit 1000
+            left join
+            public.apis_scenario as scnr on scnr.uuid = as2."scenarioID_id"
+            where scnr."name" = 'Risk'
+            and ab."storyID_id" is null and src.uuid is not null
+            limit 100
             """.format(model_uuid)
 
     articles = connect(query)

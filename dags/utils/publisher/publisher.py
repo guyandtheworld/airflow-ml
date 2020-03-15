@@ -47,15 +47,16 @@ def publish(params):
     client = pubsub_v1.PublisherClient()
     topic_path = client.topic_path(PROJECT_ID, TOPIC_ID)
 
-    name = "{}-{}-{}".format(params["id"], params["company_name"], params["date_from"])
+    name = "{}-{}-{}".format(params["entity_id"], params["entity_name"], params["date_from"])
 
     data = "{}".format(name).encode("utf-8")
     ref = dict({"num_messages": 0})
 
     params = {
-        "id": str(params["id"]),
-        "company_name": params["company_name"],
+        "entity_id": str(params["entity_id"]),
+        "entity_name": params["entity_name"],
         "common_names": json.dumps(params["common_names"]),
+        "scenario_id": str(params["scenario_id"]),
         "source": json.dumps(params["source"]),
         "date_from": params["date_from"],
         "date_to": params["date_to"],
