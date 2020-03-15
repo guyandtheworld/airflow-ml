@@ -1,11 +1,14 @@
 import logging
 import os
 import pickle
+import uuid
 
+from datetime import datetime
 from google.cloud import storage
 from google.cloud.storage import Blob
-
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+from utils.data.postgres_utils import connect, insert_values
 
 
 logging.basicConfig(level=logging.INFO)
@@ -87,3 +90,121 @@ def make_prediction(model, test: str):
     else:
         return {'financial_crime': 0,
                 'cyber_crime': 0, 'other': 1}
+
+
+def get_model_details():
+    """
+    get the bucket and model details
+    """
+
+    model_query = """
+        select am.uuid, bucket, storage_link, am."name" from apis_modeldetail am
+        left join
+        apis_scenario scr on am."scenarioID_id" = scr.uuid
+        where scr."name" = 'Risk' and
+        "version" = (select max("version") from apis_modeldetail am
+        left join
+        apis_scenario scr on am."scenarioID_id" = scr.uuid
+        where scr."name" = 'Risk')
+        """
+
+    results = connect(model_query)
+    logging.info(results)
+    return results
+
+
+def get_scenario_articles(model_uuid):
+    """
+    Fetch articles which we haven't scored
+    using our current model yet
+    """
+    query = """
+            select as2.uuid, title, published_date, src.uuid as sourceUUID,
+            "entityID_id" as entityUUID from public.apis_story as2
+            left join
+            (SELECT distinct "storyID_id" FROM public.apis_bucketscore
+            where "modelID_id" = '{}') ab on as2.uuid = ab."storyID_id"
+            left join
+            public.apis_source as src on src."name" = as2."domain"
+            where ab."storyID_id" is null and src.uuid is not null
+            limit 1000
+            """.format(model_uuid)
+
+    articles = connect(query)
+    return articles
+
+
+def get_bucket_ids():
+    """
+    Connect predictions to bucket
+    fetch UUIDs and connect to prediction
+    """
+
+    query = """
+    select ab.uuid, model_label from apis_bucket ab
+    left join apis_scenario scr on ab."scenarioID_id" = scr.uuid
+    where scr."name" = 'Risk'
+    """
+
+    results = connect(query)
+
+    bucket_ids = {}
+    for result in results:
+        bucket_ids[result[1]] = result[0]
+    return bucket_ids
+
+
+def insert_bucket_scores(df, bucket_ids, model_uuid):
+    """
+    Insert bucket scores into the db
+    """
+    values = []
+    for _, row in df.iterrows():
+        for bucket in bucket_ids.keys():
+            log_row = (str(uuid.uuid4()),
+                       row["uuid"],
+                       str(datetime.now()),
+                       row[bucket],
+                       bucket_ids[bucket],
+                       model_uuid,
+                       row["sourceUUID"],
+                       row["published_date"])
+            values.append(log_row)
+
+    logging.info("writing {} articles into bucket scores".format(df.shape[0]))
+    insert_query = """
+    INSERT INTO public.apis_bucketscore
+    (uuid, "storyID_id", "entryTime", "grossScore",
+    "bucketID_id", "modelID_id", "sourceID_id", "storyDate")
+    VALUES(%s, %s, %s, %s, %s, %s, %s, %s);
+    """
+    insert_values(insert_query, values)
+
+
+def insert_entity_scores(df, bucket_ids, model_uuid):
+    """
+    Insert bucket scores into the db
+    """
+    values = []
+    for _, row in df.iterrows():
+        for bucket in bucket_ids.keys():
+            log_row = (str(uuid.uuid4()),
+                       row["uuid"],
+                       row[bucket],
+                       bucket_ids[bucket],
+                       row["entityUUID"],
+                       model_uuid,
+                       row["sourceUUID"],
+                       str(datetime.now())
+                       )
+            values.append(log_row)
+
+    logging.info("writing {} articles into entity scores".format(df.shape[0]))
+    insert_query = """
+        INSERT INTO public.apis_entityscore
+        (uuid, "storyID_id", "grossScore", "bucketID_id",
+        "entityID_id", "modelID_id", "sourceID_id", "entryTime")
+        VALUES(%s, %s, %s, %s, %s, %s, %s, %s);
+    """
+
+    insert_values(insert_query, values)

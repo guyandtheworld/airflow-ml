@@ -10,8 +10,6 @@ services:
             options:
                 max-size: 10m
                 max-file: "3"
-        volumes:
-            - ./dags:/usr/local/airflow/dags
         ports:
             - "8080:8080"
         command: webserver

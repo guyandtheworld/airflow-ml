@@ -140,3 +140,4 @@ airflow.cfg
 airflow.db
 unittests.cfg
 webserver_config.py
+dags/utils/model/helpers/
