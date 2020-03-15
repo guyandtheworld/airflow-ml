@@ -23,7 +23,7 @@ dag = DAG(
     catchup=False, max_active_runs=1)
 
 
-gdelt_publisher = PythonOperator(task_id='publish_to_gdelt_news_scraper',
+gdelt_publisher = PythonOperator(task_id='publish',
                                  python_callable=publish_to_source,
                                  op_kwargs={"source": "gdelt",
                                             "source_uuid": "93d7f1d2-cb5a-4372-a255-50114765cd03",

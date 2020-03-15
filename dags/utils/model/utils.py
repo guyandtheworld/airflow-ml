@@ -131,7 +131,7 @@ def get_scenario_articles(model_uuid):
             public.apis_scenario as scnr on scnr.uuid = as2."scenarioID_id"
             where scnr."name" = 'Risk'
             and ab."storyID_id" is null and src.uuid is not null
-            limit 100
+            limit 10000
             """.format(model_uuid)
 
     articles = connect(query)
