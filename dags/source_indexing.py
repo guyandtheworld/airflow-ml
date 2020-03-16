@@ -46,12 +46,12 @@ def index_source():
     values = []
     logging.info("{} new domains".format(len(new_sources)))
     for source in new_sources:
-        values.append(((str(uuid.uuid4()), source[0])))
+        values.append(((str(uuid.uuid4()), source[0], 1.0)))
 
     insert_query = """
                     INSERT INTO public.apis_source
-                    (uuid, "name")
-                    VALUES(%s, %s);
+                    (uuid, "name", score)
+                    VALUES(%s, %s, %s);
                    """
 
     insert_values(insert_query, values)
