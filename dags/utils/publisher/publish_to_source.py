@@ -61,7 +61,9 @@ def publish_to_source(**kwargs):
                 full outer join
                 public.apis_alias alias
                 on entity.uuid = alias."entityID_id"
-                where "manualEntry"=true and alias is not null;
+                where "manualEntry"=true
+                and "entryVerified"=true
+                and alias is not null;
             """
 
     results = connect(query)
