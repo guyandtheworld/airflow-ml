@@ -19,17 +19,17 @@ default_args = {
 
 
 dag = DAG(
-    'headline_processing', default_args=default_args,
+    'sentiment_extraction', default_args=default_args,
     schedule_interval=timedelta(hours=2),
     catchup=False, max_active_runs=1)
 
 
-headline_sentiment = PythonOperator(task_id='sentiment_analysis',
+headline_sentiment = PythonOperator(task_id='sentiment_title',
                                     python_callable=sentiment_on_headlines,
                                     dag=dag)
 
 
-body_sentiment = PythonOperator(task_id='sentiment_analysis',
+body_sentiment = PythonOperator(task_id='sentiment_body',
                                 python_callable=sentiment_from_body,
                                 dag=dag)
 
