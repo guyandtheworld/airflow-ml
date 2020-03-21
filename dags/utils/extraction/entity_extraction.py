@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 # entity_types_to_save = ["PERSON", "NORP", "FACILITY", "ORG", "GPE"]
 
-entity_types_to_save = ["PERSON", "ORG", "GPE"]
+entity_types_to_save = ["PERSON", "ORG", "GPE", "FAC"]
 
 
 def named_entity_recognition(text: str) -> dict:
@@ -38,51 +38,7 @@ def named_entity_recognition(text: str) -> dict:
     return {"entities": results}
 
 
-def entities_from_headlines():
-    """
-    extracts entities using spaCy from the title
-    of the article
-    """
-
-    # fetch titles of all stories we haven't done
-    # entity recognition
-    query = """
-                select story.uuid, title from
-                public.apis_story story
-                left join
-                (select * from public.apis_storyentities
-                where is_headline=true) entity
-                on story.uuid = entity."storyID_id"
-                where entities is null
-                LIMIT 20000
-            """
-
-    response = connect(query)
-
-    count = 1
-
-    values = []
-    logging.info("extracting entities from {} articles".format(len(response)))
-    for story_uuid, headline in response:
-        entities = named_entity_recognition(headline)
-        values.append((str(uuid.uuid4()), True,
-                       json.dumps(entities), story_uuid,
-                       str(datetime.now())))
-        if not count % 100:
-            logging.info("processed: {}".format(count))
-        count += 1
-
-    insert_query = """
-                    INSERT INTO public.apis_storyentities
-                    (uuid, is_headline, entities, "storyID_id", "entryTime")
-                    VALUES(%s, %s, %s, %s, %s);
-                   """
-
-    insert_values(insert_query, values)
-    logging.info("finished")
-
-
-def entities_from_body():
+def extract_entities():
     """
     extracts entities using spaCy from the body
     of the article

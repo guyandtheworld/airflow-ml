@@ -2,8 +2,7 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta, datetime
 
-from utils.extraction.entity_extraction import entities_from_body
-from utils.extraction.sentiment import sentiment_from_body
+from utils.extraction.entity_extraction import extract_entities
 
 
 default_args = {
@@ -25,13 +24,8 @@ dag = DAG(
 
 
 entity_extraction = PythonOperator(task_id='entity_extraction',
-                                   python_callable=entities_from_body,
+                                   python_callable=extract_entities,
                                    dag=dag)
 
 
-sentiment_analysis = PythonOperator(task_id='sentiment_analysis',
-                                    python_callable=sentiment_from_body,
-                                    dag=dag)
-
-
-entity_extraction >> sentiment_analysis
+entity_extraction
