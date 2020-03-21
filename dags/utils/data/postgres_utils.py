@@ -14,7 +14,7 @@ params = {
 }
 
 
-def connect(query='SELECT version()'):
+def connect(query='SELECT version()', verbose=True):
     """ Connect to the PostgreSQL database server """
     conn = None
     results = []
@@ -29,7 +29,8 @@ def connect(query='SELECT version()'):
         cur = conn.cursor()
 
         # execute a statement
-        logging.info('running : {}'.format(query))
+        if verbose:
+            logging.info('running : {}'.format(query))
         cur.execute(query)
 
         # display the PostgreSQL database server version

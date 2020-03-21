@@ -39,6 +39,10 @@ def extract_entities():
     of the article
     """
 
+    TYPE = "yo"
+    STORY_REF_INPUTS = []
+    STORY_MAP_INPUTS = []
+
     # fetch all stories where body exists and we haven't done
     # entity recognition
     query = """
@@ -74,12 +78,10 @@ def extract_entities():
         count += 1
 
     story_entity_df = pd.DataFrame(values, columns=["story_uuid", "text", "label"])
-    print(story_entity_df.head())
-    print(story_entity_df.shape)
 
     # Fetch all entity aliases that we have in our storage
     query = """
-        select entity.uuid, alias.name as alias from
+        select entity.uuid, entity.name as legal_name, alias.name as alias from
         public.apis_entity entity
         full outer join
         public.apis_alias alias
@@ -87,11 +89,11 @@ def extract_entities():
         where "manualEntry"=true
         and "entryVerified"=true
         and alias is not null;
-    """
+        """
 
     results = connect(query)
 
-    entity_df = pd.DataFrame(results, columns=["entity_id", "alias"])
+    entity_df = pd.DataFrame(results, columns=["entity_id", "legal_name", "alias"])
 
     # unique values by using combination of article uuid and the text
     merged_df = pd.merge(story_entity_df, entity_df,
@@ -108,20 +110,62 @@ def extract_entities():
             where uuid in {}
             """.format(ids_str)
 
+    results = connect(query)
+    entity_ids_in_storyref = [x[0] for x in results]
+
     # if entity exists in api_entity table but not in api_story_entity_ref table
     # with same UUID, add it to apis_storyentityref
     # save all entity uuid, new and old to merged_df
-    pass
+    to_insert_into_storyref = list(set(ent_ids_to_check)
+                                   - set(entity_ids_in_storyref))
+    for euuid in to_insert_into_storyref:
+        entity_name = merged_df[merged_df["entity_id"] == euuid]["legal_name"].iloc[0]
+        STORY_REF_INPUTS.append((euuid, entity_name, TYPE))
+
+    print(STORY_REF_INPUTS)
 
     # if it doesn't exists in apis_entity table, and is new generate new uuid
     # and add new entities to apis_storyentityref
-    # fetch uuid of existing items and new items and add to merged_df
-    # if exists in apis_entity_table, just add ref in map table
-    pass
-    merged_df[merged_df.isna().any(axis=1)]
+    check_label_in_story_ref = set(merged_df[merged_df.isna().any(axis=1)]["text"])
 
-    # add corresponding UUIDs in map table
-    # Then using entity UUID and story UUID to apis_story_enity_map table
-    pass
+    ids_str = "', '".join(check_label_in_story_ref)
+    ids_str = "('{}')".format(ids_str)
+
+    query = """
+            select uuid, name from apis_storyentityref
+            where name in {}
+            """.format(ids_str)
+
+    # fetch uuid of existing items and new items and add to merged_df
+    # if exists in apis_story_ref, just add ref in map table
+    results = connect(query, verbose=False)
+    story_entity_ref_df = pd.DataFrame(results, columns=["entity_ref_id", "entity_name"])
+
+    merged_df = pd.merge(merged_df, story_entity_ref_df,
+                         how='left', left_on="text", right_on="entity_name")
+
+    new_entities = {}
+    for index, row in merged_df.iterrows():
+        if pd.isnull(row["entity_id"]) and pd.isnull(row["entity_ref_id"]):
+            if row["text"] not in new_entities:
+                new_entities[row["text"]] = str(uuid.uuid4())
+                merged_df.loc[index]["entity_id"] = new_entities[row["text"]]
+            else:
+                merged_df.loc[index]["entity_id"] = new_entities[row["text"]]
+        else:
+            merged_df.loc[index]["entity_id"] = merged_df.loc[index]["entity_ref_id"]
+
+    print(new_entities)
+
+    for key, value in new_entities.items():
+        STORY_REF_INPUTS.append((value, key, TYPE))
+
+    print(merged_df.head())
+
+    # input new_entites (without duplicates) to table
+
+    # using entity UUID and story UUID to apis_story_enity_map table
+
+    # test with counts how it works afterwards
 
     logging.info("finished")
