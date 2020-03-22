@@ -1,12 +1,12 @@
 import uuid
 import logging
-import en_core_web_md
+import en_core_web_sm
 import pandas as pd
 
 from utils.data.postgres_utils import connect, insert_values
 
 
-nlp = en_core_web_md.load()
+nlp = en_core_web_sm.load()
 
 logging.basicConfig(level=logging.INFO)
 
