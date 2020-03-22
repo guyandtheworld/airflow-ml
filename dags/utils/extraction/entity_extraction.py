@@ -1,39 +1,20 @@
 import logging
 import uuid
-import en_core_web_sm
-
 import pandas as pd
 
 from utils.data.postgres_utils import connect
-from .utils import (get_types_ids,
+from .utils import (get_articles,
+                    get_entities,
+                    get_types_ids,
                     insert_story_entity_ref,
-                    insert_story_entity_map)
+                    insert_story_entity_map,
+                    named_entity_recognition)
 
-
-nlp = en_core_web_sm.load()
 
 logging.basicConfig(level=logging.INFO)
 
-
-entity_types_to_save = ["PERSON", "ORG", "GPE", "EVENT",
-                        "FAC", "LOC", "FACILITY", "NORP",
-                        "PRODUCT"]
-
 STORY_REF_INPUTS = []
 STORY_MAP_INPUTS = []
-
-
-def named_entity_recognition(uuid: str, text: str) -> list:
-    """
-    recognizes entities in the given text
-    """
-
-    document = nlp(text)
-    out = []
-    for x in document.ents:
-        if x.label_ in entity_types_to_save:
-            out.append((uuid, x.text, x.label_))
-    return out
 
 
 def extract_entities():
@@ -42,26 +23,7 @@ def extract_entities():
     of the article
     """
 
-    # fetch all stories where body exists and we haven't done
-    # entity recognition
-    query = """
-                SELECT story.uuid, story.title, body.body FROM
-                public.apis_story story
-                LEFT JOIN
-                (SELECT distinct "storyID_id" FROM public.apis_storyentitymap) entity
-                ON story.uuid = entity."storyID_id"
-                LEFT JOIN
-                public.apis_storybody AS body
-                ON story.uuid = body."storyID_id"
-                WHERE entity."storyID_id" IS null
-                and status_code=200
-                AND body IS NOT NULL
-                LIMIT 200
-            """
-
-    response = connect(query)
-
-    df = pd.DataFrame(response, columns=["uuid", "title", "body"])
+    df = get_articles()
 
     count = 1
     values = []
@@ -81,21 +43,7 @@ def extract_entities():
     # find and input new types
     TYPES = get_types_ids(list(story_entity_df["label"].unique()))
 
-    # Fetch all entity aliases that we have in our storage
-    query = """
-        select entity.uuid, entity.name as legal_name, alias.name as alias from
-        public.apis_entity entity
-        full outer join
-        public.apis_alias alias
-        on entity.uuid = alias."entityID_id"
-        where "manualEntry"=true
-        and "entryVerified"=true
-        and alias is not null;
-        """
-
-    results = connect(query, verbose=False)
-
-    entity_df = pd.DataFrame(results, columns=["entity_id", "legal_name", "alias"])
+    entity_df = get_entities()
 
     # unique values by using combination of article uuid and the text
     merged_df = pd.merge(story_entity_df, entity_df,
