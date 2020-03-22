@@ -22,7 +22,8 @@ def connect(query='SELECT version()', verbose=True):
         # read connection parameters
 
         # connect to the PostgreSQL server
-        logging.info('Connecting to the PostgreSQL database...')
+        if verbose:
+            logging.info('Connecting to the PostgreSQL database...')
         conn = psycopg2.connect(**params)
 
         # create a cursor
