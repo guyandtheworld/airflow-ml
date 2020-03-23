@@ -24,7 +24,7 @@ def named_entity_recognition(uuid: str, text: str) -> list:
     out = []
     for x in document.ents:
         if x.label_ in entity_types_to_save and len(x.text) < 150:
-            out.append((uuid, x.text.replace("'", r"\'"), x.label_))
+            out.append((uuid, x.text.replace("'", ""), x.label_))
     return out
 
 
