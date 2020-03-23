@@ -19,7 +19,7 @@ default_args = {
 
 dag = DAG(
     'entity_extraction', default_args=default_args,
-    schedule_interval=timedelta(hours=2),
+    schedule_interval=timedelta(hours=1),
     catchup=False, max_active_runs=1)
 
 

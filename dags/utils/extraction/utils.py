@@ -42,9 +42,10 @@ def get_articles():
                 public.apis_storybody AS body
                 ON story.uuid = body."storyID_id"
                 WHERE entity."storyID_id" IS null
+                and "language" in ('english', 'US', 'CA', 'AU', 'IE')
                 and status_code=200
                 AND body IS NOT NULL
-                LIMIT 20000
+                LIMIT 5000
             """
 
     response = connect(query)
