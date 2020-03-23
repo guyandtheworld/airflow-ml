@@ -62,6 +62,8 @@ def extract_entities():
             """.format(ids_str)
 
     results = connect(query, verbose=False)
+    logging.info("{} existing entity found".format(len(results)))
+
     entity_ids_in_storyref = [x[0] for x in results]
 
     # if entity exists in api_entity table but not in api_story_entity_ref table
@@ -90,6 +92,8 @@ def extract_entities():
     # fetch uuid of existing items and new items and add to merged_df
     # if exists in apis_story_ref, just add ref in map table
     results = connect(query, verbose=False)
+
+    logging.info("{} existing storyentityref found".format(len(results)))
 
     story_entity_ref_df = pd.DataFrame(results, columns=["entity_ref_id", "entity_name"])
 
