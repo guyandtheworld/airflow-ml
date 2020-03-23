@@ -14,7 +14,7 @@ params = {
 }
 
 
-def connect(query='SELECT version()', verbose=True):
+def connect(query='SELECT version()', verbose=True, args=None):
     """ Connect to the PostgreSQL database server """
     conn = None
     results = []
@@ -32,7 +32,11 @@ def connect(query='SELECT version()', verbose=True):
         # execute a statement
         if verbose:
             logging.info('running : {}'.format(query))
-        cur.execute(query)
+
+        if args:
+            cur.execute(query, args)
+        else:
+            cur.execute(query)
 
         # display the PostgreSQL database server version
         results = cur.fetchall()

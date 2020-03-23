@@ -43,6 +43,7 @@ def extract_entities():
     # find and input new types
     TYPES = get_types_ids(list(story_entity_df["label"].unique()))
 
+    # fetch and add existing entities in api_entity
     entity_df = get_entities()
 
     # unique values by using combination of article uuid and the text
@@ -89,6 +90,7 @@ def extract_entities():
     # fetch uuid of existing items and new items and add to merged_df
     # if exists in apis_story_ref, just add ref in map table
     results = connect(query, verbose=False)
+
     story_entity_ref_df = pd.DataFrame(results, columns=["entity_ref_id", "entity_name"])
 
     merged_df = pd.merge(merged_df, story_entity_ref_df,
@@ -120,6 +122,8 @@ def extract_entities():
     uuids = []
     for i in range(len(merged_df)):
         uuids.append(str(uuid.uuid4()))
+
+    logging.info("{}".format(merged_df.isnull().values.any()))
 
     merged_df["uuid"] = uuids
     merged_df = merged_df[["uuid", "entity_id", "story_uuid"]]
