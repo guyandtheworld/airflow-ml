@@ -29,7 +29,7 @@ def get_last_tracked(row, source):
             ls."entityID_id" = '{}') fp
             """.format(source, row["entity_id"])
 
-    results = connect(query)
+    results = connect(query, verbose=False)
 
     row["last_tracked"] = results[0][0]
     if not results[0][0]:
@@ -45,7 +45,6 @@ def publish_to_source(**kwargs):
     publishes companies to scrape to the pubsub
     so news aggregator may process the data
     """
-    SCRAPE_TIMEDELTA = timedelta(hours=kwargs['timedelta'])
     SOURCE_UUID = kwargs["source_uuid"]
     SOURCE = kwargs["source"]
 
@@ -61,12 +60,11 @@ def publish_to_source(**kwargs):
                 full outer join
                 public.apis_alias alias
                 on entity.uuid = alias."entityID_id"
-                where "manualEntry"=true
-                and "entryVerified"=true
+                where "entryVerified"=true
                 and alias is not null;
             """
 
-    results = connect(query)
+    results = connect(query, verbose=False)
 
     df = pd.DataFrame(results, columns=[
                       "entity_id", "name", "alias", "scenario_id", "trackingDays"])
@@ -102,7 +100,7 @@ def publish_to_source(**kwargs):
             date_from = row["last_tracked"]
 
             # date to
-            date_to = date_from + SCRAPE_TIMEDELTA
+            date_to = datetime.now()
             date_to_write = datetime.strftime(date_to, DATE_FORMAT)
             date_from_write = datetime.strftime(date_from, DATE_FORMAT)
             params["date_from"] = date_from_write

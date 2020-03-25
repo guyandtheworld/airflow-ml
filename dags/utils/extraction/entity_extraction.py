@@ -52,17 +52,20 @@ def extract_entities():
 
     ent_ids_to_check = merged_df[~merged_df.isna().any(axis=1)]["entity_id"].unique()
 
-    ids_str = "', '".join(ent_ids_to_check)
-    ids_str = "('{}')".format(ids_str)
+    if ent_ids_to_check:
+        ids_str = "', '".join(ent_ids_to_check)
+        ids_str = "('{}')".format(ids_str)
 
-    # check if apis_entity objects exists in apis_storyentityref
-    query = """
-            select uuid from apis_storyentityref
-            where uuid in {}
-            """.format(ids_str)
+        # check if apis_entity objects exists in apis_storyentityref
+        query = """
+                select uuid from apis_storyentityref
+                where uuid in {}
+                """.format(ids_str)
 
-    results = connect(query, verbose=False)
-    logging.info("{} existing entity found".format(len(results)))
+        results = connect(query, verbose=False)
+        logging.info("{} existing entity found".format(len(results)))
+    else:
+        results = []
 
     entity_ids_in_storyref = [x[0] for x in results]
 
