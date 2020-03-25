@@ -52,7 +52,7 @@ def extract_entities():
 
     ent_ids_to_check = merged_df[~merged_df.isna().any(axis=1)]["entity_id"].unique()
 
-    if ent_ids_to_check:
+    if len(ent_ids_to_check) > 0:
         ids_str = "', '".join(ent_ids_to_check)
         ids_str = "('{}')".format(ids_str)
 
