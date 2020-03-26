@@ -8,7 +8,8 @@ from .utils import (get_articles,
                     get_types_ids,
                     insert_story_entity_ref,
                     insert_story_entity_map,
-                    named_entity_recognition)
+                    named_entity_recognition,
+                    articles_without_entities)
 
 
 logging.basicConfig(level=logging.INFO)
@@ -141,3 +142,6 @@ def extract_entities():
     insert_story_entity_map(STORY_MAP_INPUTS)
 
     logging.info("finished")
+
+    logging.info("delete articles without entities")
+    articles_without_entities(df, story_entity_df)

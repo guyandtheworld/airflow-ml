@@ -3,7 +3,9 @@ import logging
 import en_core_web_sm
 import pandas as pd
 
-from utils.data.postgres_utils import connect, insert_values
+from utils.data.postgres_utils import (connect,
+                                       insert_values,
+                                       delete_values)
 
 
 nlp = en_core_web_sm.load()
@@ -52,6 +54,30 @@ def get_articles():
 
     df = pd.DataFrame(response, columns=["uuid", "title", "body"])
     return df
+
+
+def articles_without_entities(df, entity_df):
+    """
+    delete articles that doesn't have entities
+    """
+    df = df.merge(entity_df, how="left", left_on="uuid", right_on="story_uuid")
+    df = df[df.isnull().any(axis=1)]
+
+    logging.info(df.head(20)["body"].values)
+
+    if len(df) > 0:
+        logging.info("deleting {} values".format(df["uuid"].nunique()))
+        ids_str = "', '".join(df["uuid"].unique())
+        ids_str = "('{}')".format(ids_str)
+
+        QUERIES = ['delete from apis_bucketscore ab where "storyID_id" in {}',
+                   'delete from apis_entityscore ae where "storyID_id" in {}',
+                   'delete from apis_storybody ae where "storyID_id" in {}',
+                   'delete from apis_storysentiment ae where "storyID_id" in {}',
+                   'delete from apis_story as2 where uuid in {}']
+
+        for query in QUERIES:
+            delete_values(query, ids_str)
 
 
 def get_entities():

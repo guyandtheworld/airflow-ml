@@ -95,3 +95,24 @@ def update_values(query, update_list):
     finally:
         if conn is not None:
             conn.close()
+
+
+def delete_values(query, delete_list):
+    """
+    delete multiple values
+    """
+    conn = None
+
+    try:
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+        cur.execute(query.format(delete_list))
+        conn.commit()
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        logging.info(error)
+    finally:
+        if conn is not None:
+            conn.close()
