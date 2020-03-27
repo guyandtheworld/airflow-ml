@@ -72,6 +72,29 @@ For running workers on different nodes, connect to the metastore db and the redi
 the docker-compose with `POSTGRES_HOST` and `REDIS_HOST`. Also remove the dependency to the local scheduler
 
 
+## Nginx configuration
+
+* delete `/etc/nginx/sites-enabled/default`
+* create `/etc/nginx/conf.d/reverse-proxies.conf`
+* add A Record	airflow <IP>
+* ```server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        location / {
+              proxy_pass http://localhost:8080/;
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection 'upgrade';
+              proxy_set_header Host $host;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_cache_bypass $http_upgrade;
+              proxy_set_header X-Forwarded-Proto $scheme;
+        }
+}
+```
+
+
 ## References
 
 * [Configuring Airflow in docker-compose](https://medium.com/@xnuinside/quick-guide-how-to-run-apache-airflow-cluster-in-docker-compose-615eb8abd67a)
