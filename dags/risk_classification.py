@@ -23,7 +23,7 @@ dag = DAG(
     catchup=False, max_active_runs=1)
 
 
-risk_classification = PythonOperator(task_id='risk_classification',
+risk_classification = PythonOperator(task_id='classify',
                                      python_callable=risk_classification,
                                      dag=dag)
 

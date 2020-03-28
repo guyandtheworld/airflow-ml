@@ -80,6 +80,7 @@ the docker-compose with `POSTGRES_HOST` and `REDIS_HOST`. Also remove the depend
 * ```server {
         listen 80 default_server;
         listen [::]:80 default_server;
+        server_name airflow.alrt.ai;
 
         location / {
               proxy_pass http://localhost:8080/;

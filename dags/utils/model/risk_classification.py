@@ -106,5 +106,5 @@ def risk_classification():
 
     bucket_ids = get_bucket_ids()
 
-    insert_bucket_scores(df, bucket_ids, model_uuid)
+    # insert_bucket_scores(df, bucket_ids, model_uuid)
     insert_entity_scores(df, bucket_ids, model_uuid)
