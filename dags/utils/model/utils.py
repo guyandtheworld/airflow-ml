@@ -121,7 +121,6 @@ def get_scenario_articles(model_uuid):
     to our risk scenario
     """
 
-    # change
     query = """
             select as2.uuid, title, published_date, src.uuid as sourceUUID,
             "entityID_id" as entityUUID from public.apis_story as2
@@ -133,8 +132,8 @@ def get_scenario_articles(model_uuid):
             left join
             public.apis_scenario as scnr on scnr.uuid = as2."scenarioID_id"
             where scnr."name" = 'Risk'
-            and ab."storyID_id" is NOT null and src.uuid is not null
-            limit 200
+            and ab."storyID_id" is null and src.uuid is not null
+            limit 20
             """.format(model_uuid)
 
     articles = connect(query)
@@ -188,6 +187,21 @@ def insert_bucket_scores(df, bucket_ids, model_uuid):
     insert_values(insert_query, values)
 
 
+def reset_entities(row):
+    """
+    check if the api_entity is present in the
+    detected entities list
+    """
+    if pd.isna(row["entity_id"]):
+        return [row["entityUUID"]]
+    else:
+        entities = list(row["entity_id"])
+        if row["entityUUID"] not in entities:
+            entities.append(row["entityUUID"])
+            return entities
+        return entities
+
+
 def insert_entity_scores(df, bucket_ids, model_uuid):
     """
     Insert bucket scores into the db
@@ -199,47 +213,54 @@ def insert_entity_scores(df, bucket_ids, model_uuid):
     ids_str = "('{}')".format(ids_str)
 
     query = """
-    select distinct refer.uuid as "entityID_id", "storyID_id", refer.name from apis_storyentitymap as2
-    inner join apis_storyentityref refer on as2."entityID_id"=refer.uuid
-    where "storyID_id" in {}
+    select "entityID_id", "storyID_id" from apis_storyentitymap as2
+    where as2."storyID_id" in {}
     """.format(ids_str)
 
     results = connect(query, verbose=False)
 
     entity_df = pd.DataFrame(results, columns=[
-        "entity_id", "story_id", "entity_name"])
+        "entity_id", "story_id"])
 
-    def merge(row):
-        return (row["entity_id"], row["entity_name"])
+    logging.info("{} items found".format(entity_df["story_id"].nunique()))
 
-    entity_df["entity_pair"] = entity_df[[
-        "entity_id", "entity_name"]].apply(merge, axis=1)
-
+    # get all unique entities in the articles
     entity_df = entity_df.groupby(["story_id"])[
-        "entity_pair"].apply(list).reset_index()
+        "entity_id"].apply(set).reset_index()
 
-    print(entity_df.head().values)
+    df = df.merge(entity_df, how="left", left_on="uuid", right_on="story_id")
+    df.drop("story_id", axis=1, inplace=True)
 
-    # values = []
-    # for _, row in df.iterrows():
-    #     for bucket in bucket_ids.keys():
-    #         log_row = (str(uuid.uuid4()),
-    #                    row["uuid"],
-    #                    row[bucket],
-    #                    bucket_ids[bucket],
-    #                    row["entityUUID"],
-    #                    model_uuid,
-    #                    row["sourceUUID"],
-    #                    str(datetime.now())
-    #                    )
-    #         values.append(log_row)
+    df["entity_id"] = df.apply(reset_entities, axis=1)
 
-    # logging.info("writing {} articles into entity scores".format(df.shape[0]))
-    # insert_query = """
-    #     INSERT INTO public.apis_entityscore
-    #     (uuid, "storyID_id", "grossScore", "bucketID_id",
-    #     "entityID_id", "modelID_id", "sourceID_id", "entryTime")
-    #     VALUES(%s, %s, %s, %s, %s, %s, %s, %s);
-    # """
+    values = []
 
-    # insert_values(insert_query, values)
+    """
+    for each row
+    for each entities
+    and for each bucket
+    insert the scores
+    """
+    for _, row in df.iterrows():
+        for entity in row["entity_id"]:
+            for bucket in bucket_ids.keys():
+                log_row = (str(uuid.uuid4()),
+                           row["uuid"],
+                           row[bucket],
+                           bucket_ids[bucket],
+                           entity,
+                           model_uuid,
+                           row["sourceUUID"],
+                           str(datetime.now())
+                           )
+                values.append(log_row)
+
+    logging.info("writing {} articles into entity scores".format(df.shape[0]))
+    insert_query = """
+        INSERT INTO public.apis_entityscore
+        (uuid, "storyID_id", "grossScore", "bucketID_id",
+        "entityID_id", "modelID_id", "sourceID_id", "entryTime")
+        VALUES(%s, %s, %s, %s, %s, %s, %s, %s);
+    """
+
+    insert_values(insert_query, values)
