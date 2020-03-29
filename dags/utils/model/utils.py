@@ -222,7 +222,8 @@ def insert_entity_scores(df, bucket_ids, model_uuid):
     entity_df = pd.DataFrame(results, columns=[
         "entity_id", "story_id"])
 
-    logging.info("{} items found".format(entity_df["story_id"].nunique()))
+    logging.info("{} articles found".format(entity_df["story_id"].nunique()))
+    logging.info("{} entities found".format(entity_df["entity_id"].nunique()))
 
     # get all unique entities in the articles
     entity_df = entity_df.groupby(["story_id"])[
