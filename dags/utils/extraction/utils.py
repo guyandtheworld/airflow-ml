@@ -96,8 +96,29 @@ def get_entities():
 
     results = connect(query, verbose=False)
 
-    entity_df = pd.DataFrame(results, columns=["entity_id", "legal_name", "alias"])
+    insert_entity_into_entityref()
+
+    entity_df = pd.DataFrame(
+        results, columns=["entity_id", "legal_name", "alias"])
     return entity_df
+
+
+def insert_entity_into_entityref():
+    """
+    fetch all entities that are not in entity_ref
+    and input it into entity_ref
+    """
+    query = """
+            select entity.uuid, entity.name as legal_name, entity."entityType_id"
+            from apis_entity entity where uuid not in
+            (select ae.uuid from apis_entity ae
+            inner join apis_storyentityref ar
+            on ae.uuid = ar.uuid)
+            and entity."entryVerified"=true
+            """
+    results = connect(query, verbose=False)
+    logging.info("{} entities to insert to entityref".format(len(results)))
+    insert_story_entity_ref(results)
 
 
 def get_types_ids(labels):
@@ -120,7 +141,7 @@ def get_types_ids(labels):
     new_types = set(labels) - set(existing_types)
 
     if new_types:
-        logging.info("inserting: {}".format(", ".join(new_types)))        
+        logging.info("inserting: {}".format(", ".join(new_types)))
         insert_query = """
                     INSERT INTO public.apis_entitytype
                     (uuid, "name") VALUES(%s, %s);"""

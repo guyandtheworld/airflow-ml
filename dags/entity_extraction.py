@@ -23,7 +23,7 @@ dag = DAG(
     catchup=False, max_active_runs=1)
 
 
-entity_extraction = PythonOperator(task_id='extract_entities',
+entity_extraction = PythonOperator(task_id='extract',
                                    python_callable=extract_entities,
                                    dag=dag)
 

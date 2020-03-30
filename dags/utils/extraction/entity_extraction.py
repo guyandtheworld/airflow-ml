@@ -39,7 +39,8 @@ def extract_entities():
             logging.info("processed: {}".format(count))
         count += 1
 
-    story_entity_df = pd.DataFrame(values, columns=["story_uuid", "text", "label"])
+    story_entity_df = pd.DataFrame(
+        values, columns=["story_uuid", "text", "label"])
 
     # find and input new types
     TYPES = get_types_ids(list(story_entity_df["label"].unique()))
@@ -51,7 +52,8 @@ def extract_entities():
     merged_df = pd.merge(story_entity_df, entity_df,
                          how='left', left_on="text", right_on="legal_name")
 
-    ent_ids_to_check = merged_df[~merged_df.isna().any(axis=1)]["entity_id"].unique()
+    ent_ids_to_check = merged_df[~merged_df.isna().any(
+        axis=1)]["entity_id"].unique()
 
     if len(ent_ids_to_check) > 0:
         ids_str = "', '".join(ent_ids_to_check)
@@ -76,14 +78,17 @@ def extract_entities():
     to_insert_into_storyref = list(set(ent_ids_to_check)
                                    - set(entity_ids_in_storyref))
     for euuid in to_insert_into_storyref:
-        entity_name = merged_df[merged_df["entity_id"] == euuid]["legal_name"].iloc[0]
-        entity_type = merged_df[merged_df["entity_id"] == euuid]["label"].iloc[0]
+        entity_name = merged_df[merged_df["entity_id"]
+                                == euuid]["legal_name"].iloc[0]
+        entity_type = merged_df[merged_df["entity_id"]
+                                == euuid]["label"].iloc[0]
         STORY_REF_INPUTS.append((euuid, entity_name, TYPES[entity_type]))
         logging.info("existing entity: {}".format((entity_name, entity_type)))
 
     # if it doesn't exists in apis_entity table, and is new generate new uuid
     # and add new entities to apis_storyentityref
-    check_label_in_story_ref = set(merged_df[merged_df.isna().any(axis=1)]["text"])
+    check_label_in_story_ref = set(
+        merged_df[merged_df.isna().any(axis=1)]["text"])
 
     ids_str = "', '".join(check_label_in_story_ref)
     ids_str = "('{}')".format(ids_str)
@@ -99,7 +104,8 @@ def extract_entities():
 
     logging.info("{} existing storyentityref found".format(len(results)))
 
-    story_entity_ref_df = pd.DataFrame(results, columns=["entity_ref_id", "entity_name"])
+    story_entity_ref_df = pd.DataFrame(
+        results, columns=["entity_ref_id", "entity_name"])
 
     merged_df = pd.merge(merged_df, story_entity_ref_df,
                          how='left', left_on="text", right_on="entity_name")
@@ -117,10 +123,12 @@ def extract_entities():
                 merged_df.loc[index]["entity_id"] = merged_df.loc[index]["entity_ref_id"]
 
     for key, value in new_entities.items():
-        entity_type = merged_df[merged_df["entity_id"] == value]["label"].iloc[0]
+        entity_type = merged_df[merged_df["entity_id"]
+                                == value]["label"].iloc[0]
         STORY_REF_INPUTS.append((value, key, TYPES[entity_type]))
 
-    columns_to_drop = ["legal_name", "alias", "entity_ref_id", "entity_name", "text", "label"]
+    columns_to_drop = ["legal_name", "alias",
+                       "entity_ref_id", "entity_name", "text", "label"]
     merged_df.drop(columns_to_drop, axis=1, inplace=True)
 
     # input new_entites to table
