@@ -133,7 +133,8 @@ def get_scenario_articles(model_uuid):
             public.apis_scenario as scnr on scnr.uuid = as2."scenarioID_id"
             where scnr."name" = 'Risk'
             and ab."storyID_id" is null and src.uuid is not null
-            limit 20
+            and "entityID_id" in (select uuid from apis_storyentityref as2)
+            limit 10000
             """.format(model_uuid)
 
     articles = connect(query)
@@ -187,7 +188,7 @@ def insert_bucket_scores(df, bucket_ids, model_uuid):
     insert_values(insert_query, values)
 
 
-def reset_entities(row):
+def add_article_entity_to_score(row):
     """
     check if the api_entity is present in the
     detected entities list
@@ -204,7 +205,8 @@ def reset_entities(row):
 
 def insert_entity_scores(df, bucket_ids, model_uuid):
     """
-    Insert bucket scores into the db
+    Insert entity scores into the db by fetching the uuid
+    of all the entities present in a particular article
     """
 
     article_uuids = df["uuid"].unique()
@@ -232,7 +234,7 @@ def insert_entity_scores(df, bucket_ids, model_uuid):
     df = df.merge(entity_df, how="left", left_on="uuid", right_on="story_id")
     df.drop("story_id", axis=1, inplace=True)
 
-    df["entity_id"] = df.apply(reset_entities, axis=1)
+    df["entity_id"] = df.apply(add_article_entity_to_score, axis=1)
 
     values = []
 
