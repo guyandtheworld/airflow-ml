@@ -106,5 +106,8 @@ def risk_classification():
 
     bucket_ids = get_bucket_ids()
 
-    insert_bucket_scores(df, bucket_ids, model_uuid)
-    insert_entity_scores(df, bucket_ids, model_uuid)
+    if df.shape[0] != 0:
+        insert_bucket_scores(df, bucket_ids, model_uuid)
+        insert_entity_scores(df, bucket_ids, model_uuid)
+    else:
+        logging.info(f'no entities to score')
