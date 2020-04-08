@@ -89,7 +89,7 @@ def get_articles():
                 AND "language" in ('english', 'US', 'CA', 'AU', 'IE')
                 AND status_code=200 AND body IS NOT null
                 AND "scenarioID_id" in (SELECT uuid FROM apis_scenario as2 WHERE status = 'active')
-                LIMIT 1000
+                LIMIT 5000
             """
 
     response = connect(query)
