@@ -1,14 +1,14 @@
 import uuid
 import logging
-import en_core_web_sm
 import pandas as pd
+
+from google.cloud.language_v1 import enums
+from google.protobuf.json_format import MessageToDict
 
 from utils.data.postgres_utils import (connect,
                                        insert_values,
                                        delete_values)
 
-
-nlp = en_core_web_sm.load()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -17,36 +17,78 @@ entity_types_to_save = ["PERSON", "ORG", "GPE", "EVENT",
                         "PRODUCT"]
 
 
-def named_entity_recognition(uuid: str, text: str) -> list:
+def filter_entities(dict_obj, uuid):
     """
-    recognizes entities in the given text
+    Convert the Entity response into format for our database.
+
+    Args:
+        dict_obj - dictionary with entities
+        uuid - uuid of the article
+    """
+    filtered_entities = []
+    for entity in dict_obj["entities"]:
+        if "type" in entity["mentions"][0] and \
+                entity["mentions"][0]["type"] == "PROPER":
+            filtered_entities.append(entity)
+
+    filtered = []
+    for entity in filtered_entities:
+        obj = {}
+        obj["uuid"] = uuid
+        obj["name"] = entity["name"].replace("'", "")
+        obj["type"] = entity["type"]
+        obj["salience"] = entity["salience"]
+        if "metadata" in entity and "wikipedia_url" in entity["metadata"]:
+            obj["wikipedia"] = entity["metadata"]["wikipedia_url"]
+        else:
+            obj["wikipedia"] = ""
+        if "mentions" in entity:
+            obj["mentions"] = len(entity["mentions"])
+        else:
+            obj["mentions"] = 1
+        filtered.append(tuple(obj.values()))
+    return filtered
+
+
+def analyze_entities(client, uuid, text_content):
+    """
+    Analyzing Entities in a String
+
+    Args:
+      text_content The text content to analyze
     """
 
-    document = nlp(text)
-    out = []
-    for x in document.ents:
-        if x.label_ in entity_types_to_save and len(x.text) < 150:
-            out.append((uuid, x.text.replace("'", ""), x.label_))
-    return out
+    type_ = enums.Document.Type.PLAIN_TEXT
+
+    language = "en"
+    document = {"content": text_content, "type": type_, "language": language}
+
+    encoding_type = enums.EncodingType.UTF8
+
+    response = client.analyze_entities(document, encoding_type=encoding_type)
+
+    dict_obj = MessageToDict(response)
+    dict_obj = filter_entities(dict_obj, uuid)
+    return dict_obj
 
 
 def get_articles():
-
-    # fetch all stories where body exists and we haven't done
-    # entity recognition
+    """
+    Fetch all stories where body exists and we haven't done
+    Entity Recognition from active Scenarios
+    """
     query = """
                 SELECT story.uuid, story.title, body.body FROM
                 public.apis_story story
                 LEFT JOIN
                 (SELECT distinct "storyID_id" FROM public.apis_storyentitymap) entity
                 ON story.uuid = entity."storyID_id"
-                LEFT JOIN
-                public.apis_storybody AS body
+                LEFT JOIN public.apis_storybody AS body
                 ON story.uuid = body."storyID_id"
                 WHERE entity."storyID_id" IS null
-                and "language" in ('english', 'US', 'CA', 'AU', 'IE')
-                and status_code=200
-                AND body IS NOT NULL
+                AND "language" in ('english', 'US', 'CA', 'AU', 'IE')
+                AND status_code=200 AND body IS NOT null
+                AND "scenarioID_id" in (SELECT uuid FROM apis_scenario as2 WHERE status = 'active')
                 LIMIT 5000
             """
 
@@ -107,9 +149,14 @@ def insert_entity_into_entityref():
     """
     fetch all entities that are not in entity_ref
     and input it into entity_ref
+
+    if entity exists in api_entity table but not in api_story_entity_ref table
+    with same UUID, add it to apis_storyentityref
+    save all entity uuid, new and old to merged_df
     """
     query = """
-            select entity.uuid, entity.name as legal_name, entity."entityType_id"
+            select entity.uuid, entity.name as legal_name,
+            entity."entityType_id", "wikiResource"
             from apis_entity entity where uuid not in
             (select ae.uuid from apis_entity ae
             inner join apis_storyentityref ar
@@ -161,8 +208,8 @@ def get_types_ids(labels):
 def insert_story_entity_ref(values):
     query = """
             INSERT INTO public.apis_storyentityref
-            (uuid, "name", "typeID_id")
-            VALUES(%s, %s, %s);
+            (uuid, "name", "typeID_id", wikipedia)
+            VALUES(%s, %s, %s, %s);
             """
 
     insert_values(query, values)
@@ -171,8 +218,8 @@ def insert_story_entity_ref(values):
 def insert_story_entity_map(values):
     query = """
             INSERT INTO public.apis_storyentitymap
-            (uuid, "entityID_id", "storyID_id")
-            VALUES(%s, %s, %s);
+            (uuid, "entityID_id", "storyID_id", mentions, salience)
+            VALUES(%s, %s, %s, %s, %s);
             """
 
     insert_values(query, values)
