@@ -38,7 +38,7 @@ def risk_classification():
         os.makedirs(HELPER_DIRECTORY)
 
     # fetch the latest model name from db
-    results = get_model_details()
+    results = get_model_details("Risk")
 
     if len(results) == 0:
         return

@@ -93,7 +93,7 @@ def make_prediction(model, test: str):
                 'cyber_crime': 0, 'other': 1}
 
 
-def get_model_details():
+def get_model_details(scenario):
     """
     get the bucket and model details
     """
@@ -102,12 +102,12 @@ def get_model_details():
         select am.uuid, bucket, storage_link, am."name" from apis_modeldetail am
         left join
         apis_scenario scr on am."scenarioID_id" = scr.uuid
-        where scr."name" = 'Risk' and
+        where scr."name" = '{}' and
         "version" = (select max("version") from apis_modeldetail am
         left join
         apis_scenario scr on am."scenarioID_id" = scr.uuid
-        where scr."name" = 'Risk')
-        """
+        where scr."name" = '{}')
+        """.format(scenario)
 
     results = connect(model_query)
     logging.info(results)
