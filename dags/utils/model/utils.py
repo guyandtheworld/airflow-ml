@@ -93,7 +93,7 @@ def make_prediction(model, test: str):
                 'cyber_crime': 0, 'other': 1}
 
 
-def get_model_details():
+def get_model_details(scenario):
     """
     get the bucket and model details
     """
@@ -102,19 +102,19 @@ def get_model_details():
         select am.uuid, bucket, storage_link, am."name" from apis_modeldetail am
         left join
         apis_scenario scr on am."scenarioID_id" = scr.uuid
-        where scr."name" = 'Risk' and
+        where scr."name" = '{}' and
         "version" = (select max("version") from apis_modeldetail am
         left join
         apis_scenario scr on am."scenarioID_id" = scr.uuid
-        where scr."name" = 'Risk')
-        """
+        where scr."name" = '{}')
+        """.format(scenario, scenario)
 
     results = connect(model_query)
     logging.info(results)
     return results
 
 
-def get_scenario_articles(model_uuid):
+def get_scenario_articles(model_uuid, scenario):
     """
     Fetch articles which we haven't scored
     using our current model yet which belongs
@@ -131,17 +131,17 @@ def get_scenario_articles(model_uuid):
             public.apis_source as src on src."name" = as2."domain"
             left join
             public.apis_scenario as scnr on scnr.uuid = as2."scenarioID_id"
-            where scnr."name" = 'Risk'
+            where scnr."name" = '{}'
             and ab."storyID_id" is null and src.uuid is not null
             and "entityID_id" in (select uuid from apis_storyentityref as2)
             limit 10000
-            """.format(model_uuid)
+            """.format(model_uuid, scenario)
 
     articles = connect(query)
     return articles
 
 
-def get_bucket_ids():
+def get_bucket_ids(scenario):
     """
     Connect predictions to bucket
     fetch UUIDs and connect to prediction
@@ -150,8 +150,8 @@ def get_bucket_ids():
     query = """
     select ab.uuid, model_label from apis_bucket ab
     left join apis_scenario scr on ab."scenarioID_id" = scr.uuid
-    where scr."name" = 'Risk'
-    """
+    where scr."name" = '{}'
+    """.format(scenario)
 
     results = connect(query)
 
