@@ -122,25 +122,40 @@ def get_scenario_articles(model_uuid, scenario, body=False, article_count=10000)
     """
 
     if body:
-        extra = "body,"
+        query = """
+                select as2.uuid, title, body, published_date, src.uuid as sourceUUID,
+                "entityID_id" as entityUUID from public.apis_story as2
+                left join
+                (SELECT distinct "storyID_id" FROM public.apis_bucketscore
+                where "modelID_id" = '{}') ab on as2.uuid = ab."storyID_id"
+                inner join (select "storyID_id", (array_agg(body))[1] as body
+                from apis_storybody group by "storyID_id") story_body
+                on story_body."storyID_id" = as2.uuid
+                left join
+                public.apis_source as src on src."name" = as2."domain"
+                left join
+                public.apis_scenario as scnr on scnr.uuid = as2."scenarioID_id"
+                where scnr."name" = '{}'
+                and ab."storyID_id" is null and src.uuid is not null
+                and "entityID_id" in (select uuid from apis_storyentityref as2)
+                limit {}
+                """.format(model_uuid, scenario, article_count)
     else:
-        extra = ""
-
-    query = """
-            select as2.uuid, title, {} published_date, src.uuid as sourceUUID,
-            "entityID_id" as entityUUID from public.apis_story as2
-            left join
-            (SELECT distinct "storyID_id" FROM public.apis_bucketscore
-            where "modelID_id" = '{}') ab on as2.uuid = ab."storyID_id"
-            left join
-            public.apis_source as src on src."name" = as2."domain"
-            left join
-            public.apis_scenario as scnr on scnr.uuid = as2."scenarioID_id"
-            where scnr."name" = '{}'
-            and ab."storyID_id" is null and src.uuid is not null
-            and "entityID_id" in (select uuid from apis_storyentityref as2)
-            limit {}
-            """.format(extra, model_uuid, scenario, article_count)
+        query = """
+                select as2.uuid, title published_date, src.uuid as sourceUUID,
+                "entityID_id" as entityUUID from public.apis_story as2
+                left join
+                (SELECT distinct "storyID_id" FROM public.apis_bucketscore
+                where "modelID_id" = '{}') ab on as2.uuid = ab."storyID_id"
+                left join
+                public.apis_source as src on src."name" = as2."domain"
+                left join
+                public.apis_scenario as scnr on scnr.uuid = as2."scenarioID_id"
+                where scnr."name" = '{}'
+                and ab."storyID_id" is null and src.uuid is not null
+                and "entityID_id" in (select uuid from apis_storyentityref as2)
+                limit {}
+                """.format(model_uuid, scenario, article_count)
 
     articles = connect(query)
     return articles
