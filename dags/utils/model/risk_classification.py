@@ -38,7 +38,7 @@ def risk_classification():
         os.makedirs(HELPER_DIRECTORY)
 
     # fetch the latest model name from db
-    results = get_model_details("Risk")
+    results = get_model_details(scenario="Risk")
 
     if len(results) == 0:
         return
@@ -68,7 +68,7 @@ def risk_classification():
         logging.info("model and tokenizer exists")
 
     # fetch articles
-    articles = get_scenario_articles(model_uuid)
+    articles = get_scenario_articles(model_uuid, scenario="Risk")
 
     df = pd.DataFrame(articles, columns=[
                       "uuid", "title", "published_date",
@@ -104,7 +104,7 @@ def risk_classification():
     time2 = time.time()
     logging.info(f'Took {time2-time1:.2f} s')
 
-    bucket_ids = get_bucket_ids()
+    bucket_ids = get_bucket_ids(scenario="Risk")
 
     if df.shape[0] != 0:
         insert_bucket_scores(df, bucket_ids, model_uuid)
