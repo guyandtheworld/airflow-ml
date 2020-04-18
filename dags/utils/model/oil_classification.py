@@ -65,14 +65,10 @@ def semantic_search(text, keys=keys):
     See if the keys exist in the given article
     """
 
-    result_dict = {'naptha': 0,
-                   'other': 0}
-
     for key in keys:
-
         find = text.find(key)
         if (find != -1):
-            return 1
+            return {"naptha": 0, "other": 1}
 
     key_vectors = embed(keys).numpy()
 
@@ -84,11 +80,9 @@ def semantic_search(text, keys=keys):
     bool_result = int(np.any(similarity > 0.49))
 
     if bool_result:
-        result_dict["naptha"] = 1
+        return {"naptha": 1, "other": 0}
     else:
-        result_dict["other"] = 1
-
-    return result_dict
+        return {"naptha": 0, "other": 1}
 
 
 def merge(row):
@@ -119,7 +113,7 @@ def oil_classification():
     model_uuid = results[0][0]
 
     articles = get_scenario_articles(
-        model_uuid, scenario="Oil", body=True, article_count=20000)
+        model_uuid, scenario="Oil", body=True, article_count=10000)
     df = pd.DataFrame(articles, columns=[
                       "uuid", "title", "body",
                       "published_date", "sourceUUID", "entityUUID"])
