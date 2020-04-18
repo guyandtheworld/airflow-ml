@@ -119,7 +119,7 @@ def oil_classification():
     model_uuid = results[0][0]
 
     articles = get_scenario_articles(
-        model_uuid, scenario="Oil", article_count=20000)
+        model_uuid, scenario="Oil", body=True, article_count=20000)
     df = pd.DataFrame(articles, columns=[
                       "uuid", "title", "body",
                       "published_date", "sourceUUID", "entityUUID"])

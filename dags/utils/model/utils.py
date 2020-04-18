@@ -114,15 +114,20 @@ def get_model_details(scenario):
     return results
 
 
-def get_scenario_articles(model_uuid, scenario, article_count=10000):
+def get_scenario_articles(model_uuid, scenario, body=False, article_count=10000):
     """
     Fetch articles which we haven't scored
     using our current model yet which belongs
     to our risk scenario
     """
 
+    if body:
+        extra = "body,"
+    else:
+        extra = ""
+
     query = """
-            select as2.uuid, title, published_date, src.uuid as sourceUUID,
+            select as2.uuid, title, {} published_date, src.uuid as sourceUUID,
             "entityID_id" as entityUUID from public.apis_story as2
             left join
             (SELECT distinct "storyID_id" FROM public.apis_bucketscore
@@ -135,7 +140,7 @@ def get_scenario_articles(model_uuid, scenario, article_count=10000):
             and ab."storyID_id" is null and src.uuid is not null
             and "entityID_id" in (select uuid from apis_storyentityref as2)
             limit {}
-            """.format(model_uuid, scenario, article_count)
+            """.format(extra, model_uuid, scenario, article_count)
 
     articles = connect(query)
     return articles
