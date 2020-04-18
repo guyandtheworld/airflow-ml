@@ -114,7 +114,7 @@ def get_model_details(scenario):
     return results
 
 
-def get_scenario_articles(model_uuid, scenario):
+def get_scenario_articles(model_uuid, scenario, article_count=10000):
     """
     Fetch articles which we haven't scored
     using our current model yet which belongs
@@ -134,8 +134,8 @@ def get_scenario_articles(model_uuid, scenario):
             where scnr."name" = '{}'
             and ab."storyID_id" is null and src.uuid is not null
             and "entityID_id" in (select uuid from apis_storyentityref as2)
-            limit 10000
-            """.format(model_uuid, scenario)
+            limit {}
+            """.format(model_uuid, scenario, article_count)
 
     articles = connect(query)
     return articles

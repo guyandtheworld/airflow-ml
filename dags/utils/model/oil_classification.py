@@ -77,7 +77,7 @@ def semantic_search(text, keys=keys):
     key_vectors = embed(keys).numpy()
 
     vec = CountVectorizer(ngram_range=(1, 2), stop_words=stops)
-    x = vec.fit_transform([text])
+    _ = vec.fit_transform([text])
     features = vec.get_feature_names()
     vectors = embed(features).numpy()
     similarity = cosine_similarity(vectors, key_vectors)
@@ -118,7 +118,8 @@ def oil_classification():
 
     model_uuid = results[0][0]
 
-    articles = get_scenario_articles(model_uuid, scenario="Oil")
+    articles = get_scenario_articles(
+        model_uuid, scenario="Oil", article_count=20000)
     df = pd.DataFrame(articles, columns=[
                       "uuid", "title", "body",
                       "published_date", "sourceUUID", "entityUUID"])
