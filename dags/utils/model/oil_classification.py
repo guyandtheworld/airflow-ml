@@ -68,7 +68,7 @@ def semantic_search(text, keys=keys):
     for key in keys:
         find = text.find(key)
         if (find != -1):
-            return {"naptha": 0, "other": 1}
+            return {"naptha": 1, "other": 0}
 
     key_vectors = embed(keys).numpy()
 
