@@ -117,7 +117,10 @@ def oil_classification():
     df = pd.DataFrame(articles, columns=[
                       "uuid", "title", "body",
                       "published_date", "sourceUUID", "entityUUID"])
-    df["text"] = df[["title", "body"]].apply(merge, axis=1)
+
+    if len(df) > 0:
+        df["text"] = df[["title", "body"]].apply(merge, axis=1)
+
     df.drop(['title', 'body'], axis=1, inplace=True)
 
     # make predictions
