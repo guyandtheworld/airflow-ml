@@ -114,46 +114,58 @@ def get_model_details(scenario):
     return results
 
 
-def get_scenario_articles(model_uuid, scenario, body=False, article_count=10000):
+def get_scenario_articles(model_uuid, scenario, body=False, article_count=100):
     """
     Fetch articles which we haven't scored
     using our current model yet which belongs
     to our risk scenario
+
+    Articles filtered based on the following criteria:
+    * No score in bucketscores
+    * Source exists
+    * No relations in entitymap, hence entity extraction not done
+    * EntityID in entityref
     """
 
     if body:
         query = """
-                select as2.uuid, title, body, published_date, src.uuid as sourceUUID,
-                "entityID_id" as entityUUID from public.apis_story as2
+                select story.uuid, title, body, published_date, src.uuid as sourceUUID,
+                "entityID_id" as entityUUID from public.apis_story story
                 left join
                 (SELECT distinct "storyID_id" FROM public.apis_bucketscore
-                where "modelID_id" = '{}') ab on as2.uuid = ab."storyID_id"
+                where "modelID_id" = '{}') ab on story.uuid = ab."storyID_id"
                 inner join (select "storyID_id", (array_agg(body))[1] as body
                 from apis_storybody group by "storyID_id") story_body
-                on story_body."storyID_id" = as2.uuid
+                on story_body."storyID_id" = story.uuid
+                inner join
+                (select distinct "storyID_id" from apis_storyentitymap) entitymap
+                on story.uuid = entitymap."storyID_id"
+                inner join
+                public.apis_source as src on src."name" = story."domain"
                 left join
-                public.apis_source as src on src."name" = as2."domain"
-                left join
-                public.apis_scenario as scnr on scnr.uuid = as2."scenarioID_id"
+                public.apis_scenario as scnr on scnr.uuid = story."scenarioID_id"
                 where scnr."name" = '{}'
-                and ab."storyID_id" is null and src.uuid is not null
-                and "entityID_id" in (select uuid from apis_storyentityref as2)
+                and ab."storyID_id" is null
+                and "entityID_id" in (select uuid from apis_storyentityref story)
                 limit {}
                 """.format(model_uuid, scenario, article_count)
     else:
         query = """
-                select as2.uuid, title published_date, src.uuid as sourceUUID,
-                "entityID_id" as entityUUID from public.apis_story as2
+                select story.uuid, title, published_date, src.uuid as sourceUUID,
+                "entityID_id" as entityUUID from public.apis_story story
                 left join
                 (SELECT distinct "storyID_id" FROM public.apis_bucketscore
-                where "modelID_id" = '{}') ab on as2.uuid = ab."storyID_id"
+                where "modelID_id" = '{}') ab on story.uuid = ab."storyID_id"
+                inner join
+                (select distinct "storyID_id" from apis_storyentitymap) entitymap
+                on story.uuid = entitymap."storyID_id"
+                inner join
+                public.apis_source as src on src."name" = story."domain"
                 left join
-                public.apis_source as src on src."name" = as2."domain"
-                left join
-                public.apis_scenario as scnr on scnr.uuid = as2."scenarioID_id"
+                public.apis_scenario as scnr on scnr.uuid = story."scenarioID_id"
                 where scnr."name" = '{}'
-                and ab."storyID_id" is null and src.uuid is not null
-                and "entityID_id" in (select uuid from apis_storyentityref as2)
+                and ab."storyID_id" is null
+                and "entityID_id" in (select uuid from apis_storyentityref story)
                 limit {}
                 """.format(model_uuid, scenario, article_count)
 
