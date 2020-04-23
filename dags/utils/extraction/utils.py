@@ -83,11 +83,11 @@ def get_articles():
                 LEFT JOIN
                 (SELECT distinct "storyID_id" FROM public.apis_storyentitymap) entity
                 ON story.uuid = entity."storyID_id"
-                LEFT JOIN public.apis_storybody AS body
+                INNER JOIN (select "storyID_id", (array_agg(body))[1] as body
+                from apis_storybody where status_code=200 group by "storyID_id") AS body
                 ON story.uuid = body."storyID_id"
                 WHERE entity."storyID_id" IS null
                 AND "language" in ('english', 'US', 'CA', 'AU', 'IE')
-                AND status_code=200 AND body IS NOT null
                 AND "scenarioID_id" in (SELECT uuid FROM apis_scenario as2 WHERE status = 'active')
                 LIMIT 5000
             """

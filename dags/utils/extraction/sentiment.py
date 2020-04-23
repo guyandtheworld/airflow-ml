@@ -42,10 +42,10 @@ def sentiment_on_headlines():
                SELECT story.uuid, title FROM
                public.apis_story story
                LEFT JOIN
-               (SELECT * FROM public.apis_storysentiment
-               WHERE is_headline=true) entity
-               ON story.uuid = entity."storyID_id"
-               WHERE sentiment IS NULL
+               (SELECT distinct "storyID_id" FROM public.apis_storysentiment
+               WHERE is_headline=true) sentiment
+               ON story.uuid = sentiment."storyID_id"
+               WHERE sentiment."storyID_id" IS NULL
                LIMIT 20000
             """
 
@@ -84,14 +84,13 @@ def sentiment_from_body():
                 SELECT story.uuid, body.body FROM
                 public.apis_story story
                 LEFT JOIN
-                (SELECT * FROM public.apis_storysentiment as2
+                (SELECT distinct "storyID_id" FROM public.apis_storysentiment
                 WHERE is_headline=false) sentiment
                 ON story.uuid = sentiment."storyID_id"
-                LEFT JOIN
-                public.apis_storybody AS body
+                INNER JOIN (select "storyID_id", (array_agg(body))[1] as body
+                from apis_storybody group by "storyID_id") AS body
                 ON story.uuid = body."storyID_id"
-                WHERE sentiment IS NULL
-                AND body IS NOT NULL
+                WHERE sentiment."storyID_id" IS NULL
                 LIMIT 20000
             """
 
