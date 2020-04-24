@@ -47,12 +47,9 @@ def publish(params):
     client = pubsub_v1.PublisherClient()
     topic_path = client.topic_path(PROJECT_ID, TOPIC_ID)
 
-    name = "{}-{}-{}".format(params["entity_id"], params["entity_name"], params["date_from"])
-
-    data = "{}".format(name).encode("utf-8")
     ref = dict({"num_messages": 0})
 
-    params = {
+    data = {
         "entity_id": str(params["entity_id"]),
         "entity_name": params["entity_name"],
         "common_names": json.dumps(params["common_names"]),
@@ -64,8 +61,9 @@ def publish(params):
         "history_processed": json.dumps(params["history_processed"])
     }
 
-    api_future = client.publish(topic_path, data=data, **params)
+    data = str(json.dumps(data)).encode('utf-8')
 
+    api_future = client.publish(topic_path, data=data)
     api_future.add_done_callback(get_callback(api_future, data, ref))
 
     while api_future.running():
