@@ -52,13 +52,13 @@ def publish(params):
     data = {
         "entity_id": str(params["entity_id"]),
         "entity_name": params["entity_name"],
-        "common_names": json.dumps(params["common_names"]),
+        "common_names": params["common_names"],
         "scenario_id": str(params["scenario_id"]),
-        "source": json.dumps(params["source"]),
+        "source": params["source"],
         "date_from": params["date_from"],
         "date_to": params["date_to"],
         "storage_bucket": params["storage_bucket"],
-        "history_processed": json.dumps(params["history_processed"])
+        "history_processed": params["history_processed"]
     }
 
     data = str(json.dumps(data)).encode('utf-8')
