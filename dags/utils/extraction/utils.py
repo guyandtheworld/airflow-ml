@@ -87,6 +87,7 @@ def get_articles():
                 from apis_storybody where status_code=200 group by "storyID_id") AS body
                 ON story.uuid = body."storyID_id"
                 WHERE entity."storyID_id" IS null
+                AND "language" in ('english', 'US', 'CA', 'AU', 'IE')
                 AND "scenarioID_id" in (SELECT uuid FROM apis_scenario as2 WHERE status = 'active')
                 LIMIT 5000
             """
