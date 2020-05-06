@@ -87,7 +87,6 @@ def get_articles():
                 from apis_storybody where status_code=200 group by "storyID_id") AS body
                 ON story.uuid = body."storyID_id"
                 WHERE entity."storyID_id" IS null
-                AND "language" in ('english', 'US', 'CA', 'AU', 'IE')
                 AND "scenarioID_id" in (SELECT uuid FROM apis_scenario as2 WHERE status = 'active')
                 LIMIT 5000
             """
@@ -156,7 +155,7 @@ def insert_entity_into_entityref():
     """
     query = """
             select entity.uuid, entity.name as legal_name,
-            entity."entityType_id", "wikiResource"
+            entity."typeID_id", "wikipedia"
             from apis_entity entity where uuid not in
             (select ae.uuid from apis_entity ae
             inner join apis_storyentityref ar
@@ -208,8 +207,8 @@ def get_types_ids(labels):
 def insert_story_entity_ref(values):
     query = """
             INSERT INTO public.apis_storyentityref
-            (uuid, "name", "typeID_id", wikipedia)
-            VALUES(%s, %s, %s, %s);
+            (uuid, "name", "typeID_id", wikipedia, render)
+            VALUES(%s, %s, %s, %s, %s);
             """
 
     insert_values(query, values)

@@ -129,7 +129,8 @@ def extract_entities():
             value["uuid"],
             key,
             TYPES[value["type"]],
-            value["wiki"]
+            value["wiki"],
+            True
         )
         STORY_REF_INPUTS.append(obj)
 
