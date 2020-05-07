@@ -71,7 +71,6 @@ def publish_to_source(**kwargs):
         params = {}
         params["entity_id"] = row["entity_id"]
         params["entity_name"] = row["name"]
-        params["common_names"] = row["keywords"]
         params["scenario_id"] = row["scenario_id"]
         params["source"] = [SOURCE]
         params["storage_bucket"] = BUCKET_NAME
@@ -99,7 +98,9 @@ def publish_to_source(**kwargs):
             params["date_from"] = date_from_write
             params["date_to"] = date_to_write
 
-        success = publish(params)
+        for i in range(0, len(row['keywords']), 3):
+            params["common_names"] = row["keywords"][i:i+3]
+            success = publish(params)
 
         # if succeeded in publishing update company status & date
         if success:
