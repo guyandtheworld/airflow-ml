@@ -29,9 +29,6 @@ HELPER_DIRECTORY = "{}/{}".format(path, "helpers")
 nltk.download('stopwords')
 stops = set(stopwords.words('english'))
 
-# enlarge to match more keywords semantically
-keys = ['shutdown', "explosion", "blast"]
-
 # if the model doesn't exist, download model
 if not os.path.exists(HELPER_DIRECTORY):
     os.makedirs(HELPER_DIRECTORY)
@@ -60,15 +57,15 @@ def download_and_extract_model():
         os.remove(target_path)
 
 
-def semantic_search(text, keys=keys):
+def semantic_search(text, keys):
     """
     See if the keys exist in the given article
     """
 
     for key in keys:
-        find = text.find(key)
+        find = text.lower().find(key)
         if (find != -1):
-            return {"naptha": 1, "other": 0}
+            return 1
 
     key_vectors = embed(keys).numpy()
 
@@ -80,9 +77,24 @@ def semantic_search(text, keys=keys):
     bool_result = int(np.any(similarity > 0.49))
 
     if bool_result:
-        return {"naptha": 1, "other": 0}
+        return 1
     else:
-        return {"naptha": 0, "other": 1}
+        return 0
+
+
+def search(text, bucket_keywords):
+    prediction = {}
+    for bucket in bucket_keywords.keys():
+        if bucket != 'other':
+            result = semantic_search(text, bucket_keywords[bucket])
+            prediction[bucket] = result
+
+    if 1 in list(prediction.values()):
+        prediction["other"] = 0
+    else:
+        prediction["other"] = 1
+
+    return prediction
 
 
 def merge(row):
@@ -110,6 +122,8 @@ def oil_classification():
     if len(results) == 0:
         return
 
+    bucket_ids, bucket_keywords = get_bucket_ids(scenario="Oil")
+
     model_uuid = results[0][0]
 
     articles = get_scenario_articles(
@@ -127,7 +141,7 @@ def oil_classification():
     count = 1
     predictions = []
     for _, row in df.iterrows():
-        prediction = semantic_search(text=row['text'])
+        prediction = search(text=row['text'], bucket_keywords=bucket_keywords)
         predictions.append(prediction)
         count += 1
         if count % 100 == 0:
@@ -140,8 +154,6 @@ def oil_classification():
     df['other'] = df['predictions'].apply(lambda x: x['other'])
 
     df.drop('predictions', axis=1, inplace=True)
-
-    bucket_ids = get_bucket_ids(scenario="Oil")
 
     if df.shape[0] != 0:
         insert_bucket_scores(df, bucket_ids, model_uuid)

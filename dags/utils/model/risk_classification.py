@@ -104,7 +104,7 @@ def risk_classification():
     time2 = time.time()
     logging.info(f'Took {time2-time1:.2f} s')
 
-    bucket_ids = get_bucket_ids(scenario="Risk")
+    bucket_ids, _ = get_bucket_ids(scenario="Risk")
 
     if df.shape[0] != 0:
         insert_bucket_scores(df, bucket_ids, model_uuid)

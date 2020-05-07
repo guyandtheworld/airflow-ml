@@ -156,7 +156,7 @@ def insert_entity_into_entityref():
     """
     query = """
             select entity.uuid, entity.name as legal_name,
-            entity."typeID_id", "wikipedia"
+            entity."typeID_id", "wikipedia", true
             from apis_entity entity where uuid not in
             (select ae.uuid from apis_entity ae
             inner join apis_storyentityref ar

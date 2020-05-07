@@ -180,7 +180,7 @@ def get_bucket_ids(scenario):
     """
 
     query = """
-    select ab.uuid, model_label from apis_bucket ab
+    select ab.uuid, model_label, keywords from apis_bucket ab
     left join apis_scenario scr on ab."scenarioID_id" = scr.uuid
     where scr."name" = '{}'
     """.format(scenario)
@@ -190,7 +190,12 @@ def get_bucket_ids(scenario):
     bucket_ids = {}
     for result in results:
         bucket_ids[result[1]] = result[0]
-    return bucket_ids
+
+    bucket_keywords = {}
+    for result in results:
+        bucket_keywords[result[1]] = result[2]
+
+    return bucket_ids, bucket_keywords
 
 
 def insert_bucket_scores(df, bucket_ids, model_uuid):
