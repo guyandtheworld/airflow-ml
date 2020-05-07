@@ -114,7 +114,7 @@ def get_model_details(scenario):
     return results
 
 
-def get_scenario_articles(model_uuid, scenario, body=False, article_count=100):
+def get_scenario_articles(model_uuid, scenario, body=False, article_count=5000):
     """
     Fetch articles which we haven't scored
     using our current model yet which belongs
