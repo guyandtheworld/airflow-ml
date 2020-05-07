@@ -48,28 +48,21 @@ def publish_to_source(**kwargs):
     SOURCE_UUID = kwargs["source_uuid"]
     SOURCE = kwargs["source"]
 
-    # load companies which were added to be tracked - manualEntry
-    # and with alias given so that we can scrape it
+    # load companies which were added to be tracked
     query = """
-                select entity.uuid, entity.name as legal_name,
-                alias.name as alias, "scenarioID_id", scenario."trackingDays" from
+                select entity.uuid, entity.name, keywords,
+                "scenarioID_id", scenario."trackingDays" from
                 public.apis_entity entity
                 left join
                 public.apis_scenario scenario
                 on entity."scenarioID_id" = scenario.uuid
-                full outer join
-                public.apis_alias alias
-                on entity.uuid = alias."entityID_id"
-                where "entryVerified"=true
-                and alias is not null;
+                where "entryVerified"=true;
             """
 
     results = connect(query, verbose=False)
 
     df = pd.DataFrame(results, columns=[
-                      "entity_id", "name", "alias", "scenario_id", "trackingDays"])
-    df = df.groupby(['entity_id', 'name', 'scenario_id', 'trackingDays'])['alias'].apply(list) \
-        .reset_index()
+                      "entity_id", "name", "keywords", "scenario_id", "trackingDays"])
 
     df = df.apply(lambda x: get_last_tracked(x, SOURCE), axis=1)
 
@@ -78,7 +71,7 @@ def publish_to_source(**kwargs):
         params = {}
         params["entity_id"] = row["entity_id"]
         params["entity_name"] = row["name"]
-        params["common_names"] = row["alias"]
+        params["common_names"] = row["keywords"]
         params["scenario_id"] = row["scenario_id"]
         params["source"] = [SOURCE]
         params["storage_bucket"] = BUCKET_NAME
