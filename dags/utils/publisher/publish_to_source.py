@@ -98,8 +98,8 @@ def publish_to_source(**kwargs):
             params["date_from"] = date_from_write
             params["date_to"] = date_to_write
 
-        for i in range(0, len(row['keywords']), 3):
-            params["common_names"] = row["keywords"][i:i+3]
+        for i in range(0, len(row['keywords'])):
+            params["common_names"] = row["keywords"][i:i+1]
             success = publish(params)
 
         # if succeeded in publishing update company status & date
