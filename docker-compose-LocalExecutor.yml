@@ -20,3 +20,5 @@ services:
             retries: 3
         env_file:
           - .keys/airflow.env
+        volumes:
+            - ./logs:./logs
