@@ -127,7 +127,7 @@ def oil_classification():
     model_uuid = results[0][0]
 
     articles = get_scenario_articles(
-        model_uuid, scenario="Oil", body=True, article_count=10000)
+        model_uuid, scenario="Oil", body=True, article_count=5000)
     df = pd.DataFrame(articles, columns=[
                       "uuid", "title", "body",
                       "published_date", "sourceUUID", "entityUUID"])
@@ -150,8 +150,8 @@ def oil_classification():
 
     df['predictions'] = predictions
 
-    df['naptha'] = df['predictions'].apply(lambda x: x['naptha'])
-    df['other'] = df['predictions'].apply(lambda x: x['other'])
+    for bucket in bucket_keywords.keys():
+        df[bucket] = df['predictions'].apply(lambda x: x[bucket])
 
     df.drop('predictions', axis=1, inplace=True)
 
