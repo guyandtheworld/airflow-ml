@@ -12,10 +12,6 @@ from utils.data.postgres_utils import (connect,
 
 logging.basicConfig(level=logging.INFO)
 
-entity_types_to_save = ["PERSON", "ORG", "GPE", "EVENT",
-                        "FAC", "LOC", "FACILITY", "NORP",
-                        "PRODUCT"]
-
 
 def filter_entities(dict_obj, uuid):
     """
@@ -203,6 +199,38 @@ def get_types_ids(labels):
     types = {item[1]: item[0] for item in results}
 
     return types
+
+
+def match_manual_entity_to_story(df):
+    """
+    Create a manual check of whether our pre-determined
+    entities are in the story and create a link.
+    """
+    query = """
+            select entity.uuid, entity.name as legal_name
+            from apis_entity ae
+            inner join apis_storyentityref entity
+            on ae.uuid = entity.uuid
+            """
+    results = connect(query, verbose=False)
+    df["text"] = df["title"] + df["body"]
+    df["text"] = df["text"].str.lower()
+
+    story_map_inputs = []
+
+    for _, row in df.iterrows():
+        for entity in results:
+            if entity[1].lower() in row["text"]:
+                data = (str(uuid.uuid4()),
+                        entity[0],
+                        row["uuid"],
+                        1,
+                        .5
+                        )
+                story_map_inputs.append(data)
+
+    logging.info("{} manual relations found".format(len(story_map_inputs)))
+    insert_story_entity_map(story_map_inputs)
 
 
 def insert_story_entity_ref(values):

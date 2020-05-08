@@ -12,6 +12,7 @@ from .utils import (get_articles,
                     insert_story_entity_ref,
                     insert_story_entity_map,
                     analyze_entities,
+                    match_manual_entity_to_story,
                     articles_without_entities)
 
 
@@ -154,6 +155,9 @@ def extract_entities():
 
     STORY_MAP_INPUTS = [tuple(row)
                         for row in merged_df.itertuples(index=False)]
+
+    # see if there are apis_entity elements in the stories
+    match_manual_entity_to_story(df)
 
     insert_story_entity_ref(STORY_REF_INPUTS)
     insert_story_entity_map(STORY_MAP_INPUTS)
