@@ -1,5 +1,6 @@
 import os
 import uuid
+import logging
 
 import pandas as pd
 
@@ -80,13 +81,25 @@ def publish_to_source(**kwargs):
             # date from
             date_from = datetime.now() - \
                 timedelta(days=int(row["trackingDays"]))
-            date_from = datetime.strftime(date_from, DATE_FORMAT)
-            params["date_from"] = date_from
 
             # date to
             date_to = datetime.now()
-            date_to_write = datetime.strftime(date_to, DATE_FORMAT)
-            params["date_to"] = date_to_write
+
+            while True:
+                date_runner = date_from + timedelta(days=30)
+
+                params["date_from"] = datetime.strftime(date_from, DATE_FORMAT)
+                params["date_to"] = datetime.strftime(date_runner, DATE_FORMAT)
+
+                date_from = date_runner
+
+                if date_runner >= date_to:
+                    date_to = date_runner - timedelta(days=30)
+                    break
+
+                for i in range(0, len(row['keywords']), 2):
+                    params["common_names"] = row["keywords"][i:i+2]
+                    success = publish(params)
         else:
             # date from
             date_from = row["last_tracked"]
@@ -98,10 +111,11 @@ def publish_to_source(**kwargs):
             params["date_from"] = date_from_write
             params["date_to"] = date_to_write
 
-        for i in range(0, len(row['keywords'])):
-            params["common_names"] = row["keywords"][i:i+1]
-            success = publish(params)
+            for i in range(0, len(row['keywords']), 3):
+                params["common_names"] = row["keywords"][i:i+3]
+                success = publish(params)
 
+        logging.info("{} - {}".format(row["name"], date_to))
         # if succeeded in publishing update company status & date
         if success:
             items_to_insert.append((str(uuid.uuid4()), str(date_to),
