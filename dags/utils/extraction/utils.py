@@ -124,7 +124,6 @@ def get_entities():
     query = """
         select entity.uuid, entity.name as legal_name from
         public.apis_entity entity
-        full outer join
         where "manualEntry"=true
         and "entryVerified"=true;
         """
