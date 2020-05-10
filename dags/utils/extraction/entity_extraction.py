@@ -135,7 +135,7 @@ def extract_entities():
         )
         STORY_REF_INPUTS.append(obj)
 
-    columns_to_drop = ["legal_name", "alias", "wiki", "label",
+    columns_to_drop = ["legal_name", "wiki", "label",
                        "entity_ref_id", "entity_name", "text"]
     merged_df.drop(columns_to_drop, axis=1, inplace=True)
 

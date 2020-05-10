@@ -122,14 +122,11 @@ def get_entities():
 
     # Fetch all entity aliases that we have in our storage
     query = """
-        select entity.uuid, entity.name as legal_name, alias.name as alias from
+        select entity.uuid, entity.name as legal_name from
         public.apis_entity entity
         full outer join
-        public.apis_alias alias
-        on entity.uuid = alias."entityID_id"
         where "manualEntry"=true
-        and "entryVerified"=true
-        and alias is not null;
+        and "entryVerified"=true;
         """
 
     results = connect(query, verbose=False)
@@ -137,7 +134,7 @@ def get_entities():
     insert_entity_into_entityref()
 
     entity_df = pd.DataFrame(
-        results, columns=["entity_id", "legal_name", "alias"])
+        results, columns=["entity_id", "legal_name"])
     return entity_df
 
 
