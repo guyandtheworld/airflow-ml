@@ -3,6 +3,7 @@ import uuid
 import pandas as pd
 import time
 
+from datetime import datetime
 from timeit import default_timer as timer
 from google.cloud import language_v1
 from utils.data.postgres_utils import connect
@@ -131,7 +132,8 @@ def extract_entities():
             key,
             TYPES[value["type"]],
             value["wiki"],
-            True
+            True,
+            str(datetime.utcnow())
         )
         STORY_REF_INPUTS.append(obj)
 
@@ -150,8 +152,11 @@ def extract_entities():
     # using entity UUID and story UUID to apis_story_enity_map table
 
     merged_df["uuid"] = uuids
+    merged_df["created_at"] = str(datetime.utcnow())
+
     merged_df = merged_df[["uuid", "entity_id",
-                           "story_uuid", "mentions", "salience"]]
+                           "story_uuid", "mentions",
+                           "salience", "created_at"]]
 
     STORY_MAP_INPUTS = [tuple(row)
                         for row in merged_df.itertuples(index=False)]

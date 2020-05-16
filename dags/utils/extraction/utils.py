@@ -221,7 +221,8 @@ def match_manual_entity_to_story(df):
                         entity[0],
                         row["uuid"],
                         1,
-                        .5
+                        .5,
+                        str(datetime.utcnow())
                         )
                 story_map_inputs.append(data)
 
@@ -232,8 +233,8 @@ def match_manual_entity_to_story(df):
 def insert_story_entity_ref(values):
     query = """
             INSERT INTO public.apis_storyentityref
-            (uuid, "name", "typeID_id", wikipedia, render)
-            VALUES(%s, %s, %s, %s, %s);
+            (uuid, "name", "typeID_id", wikipedia, render, created_at)
+            VALUES(%s, %s, %s, %s, %s, %s);
             """
 
     insert_values(query, values)
@@ -242,8 +243,8 @@ def insert_story_entity_ref(values):
 def insert_story_entity_map(values):
     query = """
             INSERT INTO public.apis_storyentitymap
-            (uuid, "entityID_id", "storyID_id", mentions, salience)
-            VALUES(%s, %s, %s, %s, %s);
+            (uuid, "entityID_id", "storyID_id", mentions, salience, created_at)
+            VALUES(%s, %s, %s, %s, %s, %s);
             """
 
     insert_values(query, values)
