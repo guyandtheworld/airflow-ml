@@ -2,8 +2,8 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta, datetime
 
-from utils.extraction.sentiment import (sentiment_on_headlines,
-                                        sentiment_from_body)
+from utils.sentiment.analysis import (sentiment_on_headlines,
+                                      sentiment_from_body)
 
 
 default_args = {
