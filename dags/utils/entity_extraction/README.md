@@ -50,4 +50,5 @@
 * Find and input `TYPE_IDS`
 * Entities with null values on merged_df are new `storyentityref` (parent) and corresponding `entity_alias`
 * Generate new UUIDs for `storyentityref`
+* In manual entity mapping, add alias support
 * Input ALIAS, MAP and REF

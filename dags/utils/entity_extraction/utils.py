@@ -2,12 +2,16 @@ import uuid
 import logging
 import pandas as pd
 
+from datetime import datetime
+
+
 from google.cloud.language_v1 import enums
 from google.protobuf.json_format import MessageToDict
 
 from utils.data.postgres_utils import (connect,
-                                       insert_values,
-                                       delete_values)
+                                       publish_values,
+                                       delete_values,
+                                       insert_values)
 
 
 logging.basicConfig(level=logging.INFO)
@@ -139,25 +143,44 @@ def get_entities():
 
 def insert_entity_into_entityref():
     """
-    fetch all entities that are not in entity_ref
-    and input it into entity_ref
+    Fetch all entities that are not in entity_ref and input it into entity_ref.
 
-    if entity exists in api_entity table but not in api_story_entity_ref table
-    with same UUID, add it to apis_storyentityref
-    save all entity uuid, new and old to merged_df
+    * If entity exists in api_entity table but not in api_story_entity_ref table
+      with same UUID, add it to apis_storyentityref save all entity uuid,
+      new and old to merged_df
+    * Check if the alias exists for the entity, otherwise input the values
+      into alias too
     """
-    query = """
-            select entity.uuid, entity.name as legal_name,
-            entity."typeID_id", "wikipedia", true
-            from apis_entity entity where uuid not in
-            (select ae.uuid from apis_entity ae
-            inner join apis_storyentityref ar
-            on ae.uuid = ar.uuid)
-            and entity."entryVerified"=true
-            """
-    results = connect(query, verbose=False)
-    logging.info("{} entities to insert to entityref".format(len(results)))
-    insert_story_entity_ref(results)
+    entity_ref_query = """
+                       select entity.uuid, entity.name as legal_name,
+                       entity."typeID_id", "wikipedia", true
+                       from apis_entity entity where uuid not in
+                       (select ae.uuid from apis_entity ae
+                       inner join apis_storyentityref ar
+                       on ae.uuid = ar.uuid)
+                       and entity."entryVerified"=true
+                       """
+
+    entity_ref_results = connect(entity_ref_query, verbose=False)
+    logging.info("{} entities to insert to entityref".format(
+        len(entity_ref_results)))
+    insert_story_entity_ref(entity_ref_results)
+
+    alias_query = """
+                  select uuid_generate_v4(), entity.name, "wikipedia", -3,
+                  now()::text, entity.uuid, entity."typeID_id"
+                  from apis_entity entity where uuid not in
+                  (select ae.uuid from apis_entity ae
+                  inner join entity_alias ar
+                  on ae.uuid = ar."parentID_id")
+                  and entity."entryVerified"=true
+                  """
+
+    alias_results = connect(alias_query, verbose=False)
+    logging.info("{} entities to insert to entity_alias".format(
+        len(alias_results)))
+
+    insert_entity_alias(alias_results)
 
 
 def get_types_ids(labels):
@@ -230,6 +253,16 @@ def match_manual_entity_to_story(df):
     insert_story_entity_map(story_map_inputs)
 
 
+def insert_entity_alias(values):
+    query = """
+            INSERT INTO public.entity_alias
+            (uuid, "name", wikipedia, score, created_at, "parentID_id", "typeID_id")
+            VALUES(%s, %s, %s, %s, %s, %s, %s);
+            """
+
+    publish_values(query, values, source="airflow_entity_extraction_alias")
+
+
 def insert_story_entity_ref(values):
     query = """
             INSERT INTO public.apis_storyentityref
@@ -237,7 +270,7 @@ def insert_story_entity_ref(values):
             VALUES(%s, %s, %s, %s, %s, %s);
             """
 
-    insert_values(query, values)
+    publish_values(query, values, source="airflow_entity_extraction_entityref")
 
 
 def insert_story_entity_map(values):
@@ -247,4 +280,4 @@ def insert_story_entity_map(values):
             VALUES(%s, %s, %s, %s, %s, %s);
             """
 
-    insert_values(query, values)
+    publish_values(query, values, source="airflow_entity_extraction_entitymap")

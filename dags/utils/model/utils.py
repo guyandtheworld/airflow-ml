@@ -16,12 +16,11 @@ logging.basicConfig(level=logging.INFO)
 
 BUCKET = "production_models"
 
-os.chdir(os.path.dirname(__file__))
-path = os.getcwd()
-HELPER_DIRECTORY = "{}/{}".format(path, "helpers")
-
 
 def padding(corpus, train=True):
+    os.chdir(os.path.dirname(__file__))
+    path = os.getcwd()
+    HELPER_DIRECTORY = "{}/{}".format(path, "helpers")
     path = "{}/{}".format(HELPER_DIRECTORY, "tokenizer.pickle")
     with open(path, 'rb') as tok:
         tokenizer = pickle.load(tok)
