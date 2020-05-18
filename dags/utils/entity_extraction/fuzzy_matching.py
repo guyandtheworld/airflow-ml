@@ -1,9 +1,15 @@
+import logging
 import pandas as pd
 import numpy as np
-from rapidfuzz import process, utils, fuzz
 
+from rapidfuzz import process, utils, fuzz
 from tqdm.notebook import tqdm
+from utils.data.postgres_utils import connect
+
+
 tqdm.pandas()
+
+logging.basicConfig(level=logging.INFO)
 
 
 def process_entity(entity):
@@ -13,40 +19,68 @@ def process_entity(entity):
     return processed_entity
 
 
-def process_fuzzy(df):
-    count = 0
-    results = {}
-    processed_orgs = {row['uuid']: utils.default_process(
-        row['name']) for _, row in df.iterrows()}
+def process_fuzzy(merged_df, alias):
+    """
+    Uses Fuzzy matching to check if any of the unmatched entities
+    can be matched using either wiki-links or fuzzy matching.
+    """
 
-    for index, entity in df.iterrows():
+    count = 0
+    alias['name'] = alias['name'].apply(str)
+    processed_orgs = {row['parent']: utils.default_process(
+        row['name']) for _, row in alias.iterrows()}
+
+    all_wiki_links = alias.wikipedia.unique()
+
+    # Fetch all the entities that haven't been matched
+    for index, entity in merged_df[merged_df["entity_ref_id"].isnull()].iterrows():
 
         if count % 100 == 0:
-            print(count)
+            logging.info(count)
         count += 1
 
-        wikilink = entity.wikipedia
+        wikilink = entity.wiki
 
         # match wikilink to any other wikilink, and if it has a alias, match it to that O(1)
-        if wikilink and wikilink in df.wikipedia.unique():
-            match = df[df['wikipedia'] == wikilink].index[0]
-            df.loc[index, 'alias'] = match
-            df.loc[index, 'score'] = -1
+        if wikilink and wikilink in all_wiki_links:
+            match = alias[alias['wikipedia'] == wikilink]['parent'][0]
+            merged_df.loc[index, 'entity_ref_id'] = match
+            merged_df.loc[index, 'score'] = -1
             continue
 
         # try matching processed entity.name with all of the entities
         best_match = process.extractOne(
-            entity.processed, processed_orgs, processor=None, scorer=fuzz.token_set_ratio, score_cutoff=70)
+            entity.text, processed_orgs, processor=process_entity,
+            scorer=fuzz.token_set_ratio, score_cutoff=70)
 
-        if best_match and best_match[0] != entity.uuid and \
-                entity.typeID_id == df.loc[best_match[0]].typeID_id:
-            df.loc[index, 'alias'] = best_match[0]
-            df.loc[index, 'score'] = best_match[1]
+        # if match found and is of the same type
+
+        if best_match and \
+                entity.label == alias[alias["parent"] == best_match[0]].any().type:
+            merged_df.loc[index, 'entity_ref_id'] = best_match[0]
+            merged_df.loc[index, 'score'] = best_match[1]
         else:
-            df.loc[index, 'alias'] = entity.uuid
-            df.loc[index, 'score'] = -2
-    return df
+            merged_df.loc[index, 'score'] = -2
+    return merged_df
 
 
 def fuzzy_matching():
-    df['processed'] = df.name.map(process_entity)
+    """
+    Score
+    * -1: Matched using Wikipedia
+    * -2: Should be parent - create parent and corresponding Alias
+    * 0 - 100: Match found using Fuzzy
+    """
+    results = connect(
+        'select name, wikipedia, "parentID_id", "typeID_id" from entity_alias')
+
+    alias = pd.DataFrame(results, columns=[
+        'name', 'wikipedia', 'parent', 'type'])
+
+    logging.info("Starting Fuzzy matching.")
+    merged_df = pd.read_csv("merged_df.csv")
+
+    merged_df['score'] = np.nan
+
+    merged_df = process_fuzzy(merged_df, alias)
+    merged_df.to_csv("merged_fuzzy_df.csv", index=False)

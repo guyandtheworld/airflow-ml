@@ -14,47 +14,80 @@ logging.basicConfig(level=logging.INFO)
 
 STORY_REF_INPUTS = []
 STORY_MAP_INPUTS = []
+ENTITY_ALIAS_INPUTS = []
 
 
 def insert_values():
-
-    merged_df = pd.read_csv("merged_df.csv")
+    """
+    Input mappings, parents and alias into corresponding tables.
+    """
+    merged_df = pd.read_csv("merged_fuzzy_df.csv")
     df = pd.read_csv("df.csv")
     story_entity_df = pd.read_csv("story_entity_df.csv")
+
+    merged_df['entity_id'] = merged_df['entity_id'].apply(str)
 
     # find and input new types
     TYPES = get_types_ids(list(story_entity_df["label"].unique()))
 
-    # prepare entity ids and new entities to insert
-    new = {}
-    for index, row in merged_df.iterrows():
-        if pd.isnull(row["entity_id"]):
-            if pd.isnull(row["entity_ref_id"]):
-                if row["text"] not in new:
-                    new[row["text"]] = dict(
-                        uuid=str(uuid.uuid4()),
-                        type=row["label"],
-                        wiki=row["wiki"]
-                    )
-                    merged_df.at[index,
-                                 "entity_id"] = new[row["text"]]["uuid"]
-                else:
-                    merged_df.at[index,
-                                 "entity_id"] = new[row["text"]]["uuid"]
-            else:
-                merged_df.at[index,
-                             "entity_id"] = merged_df.loc[index]["entity_ref_id"]
+    new_parents = {}
+    new_alias = {}
 
-    for key, value in new.items():
-        obj = (
-            value["uuid"],
-            key,
-            TYPES[value["type"]],
-            value["wiki"],
-            True,
-            str(datetime.utcnow())
-        )
-        STORY_REF_INPUTS.append(obj)
+    # if score = -2, it needs new alias as well as new parents
+    for index, row in merged_df[merged_df["score"] == -2].iterrows():
+
+        # create a new parent
+        if row["text"] not in new_parents:
+            new_parents[row["text"]] = [
+                str(uuid.uuid4()),
+                row["text"],
+                TYPES[row["label"]],
+                row["wiki"],
+                True,
+                str(datetime.utcnow())
+            ]
+
+        merged_df.at[index,
+                     "entity_id"] = new_parents[row["text"]][0]
+
+        # add alias with corresponding parent ID
+        if row["text"] not in new_alias:
+            new_alias[row["text"]] = [
+                str(uuid.uuid4()),
+                row["text"],
+                row["wiki"],
+                row["score"],
+                str(datetime.utcnow()),
+                new_parents[row["text"]][0],
+                TYPES[row["label"]]
+            ]
+
+    for index, row in merged_df[merged_df["score"] >= -1].iterrows():
+        # if score >= -1, it needs new alias
+        if row["text"] not in new_alias:
+            new_alias[row["text"]] = [
+                str(uuid.uuid4()),
+                row["text"],
+                row["wiki"],
+                row["score"],
+                str(datetime.utcnow()),
+                row["entity_ref_id"],
+                TYPES[row["label"]]
+            ]
+
+    # if already matched, write story_entity_id into entity_id for mapping
+    for index, row in merged_df[merged_df["score"].isnull()].iterrows():
+        merged_df.at[index,
+                     "entity_id"] = row["entity_ref_id"]
+
+    for _, value in new_parents.items():
+        STORY_REF_INPUTS.append(value)
+
+    for _, value in new_alias.items():
+        ENTITY_ALIAS_INPUTS.append(value)
+
+    print("parents: ", len(STORY_REF_INPUTS))
+    print("alias: ", len(ENTITY_ALIAS_INPUTS))
 
     columns_to_drop = ["legal_name", "wiki", "label",
                        "entity_ref_id", "entity_name", "text"]
@@ -62,10 +95,11 @@ def insert_values():
 
     # generate uuids for story_map
     uuids = []
-    for i in range(len(merged_df)):
+    for _ in range(len(merged_df)):
         uuids.append(str(uuid.uuid4()))
 
-    logging.info("{}".format(merged_df.isnull().values.any()))
+    print(merged_df.head())
+    logging.info("check na {}".format(merged_df.isnull().values.any()))
 
     # input new_entites to table
     # using entity UUID and story UUID to apis_story_enity_map table

@@ -71,7 +71,7 @@ def extract_entities():
     ids_str = "('{}')".format(ids_str)
 
     query = """
-            select uuid, name from apis_storyentityref
+            select "parentID_id", name from entity_alias
             where name in {}
             """.format(ids_str)
 
@@ -79,7 +79,7 @@ def extract_entities():
     # if exists in apis_story_ref, just add ref in map table
     results = connect(query, verbose=False)
 
-    logging.info("{} existing storyentityref found".format(len(results)))
+    logging.info("{} existing entity_alias found".format(len(results)))
 
     story_entity_ref_df = pd.DataFrame(
         results, columns=["entity_ref_id", "entity_name"])
