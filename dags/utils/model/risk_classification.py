@@ -16,10 +16,6 @@ from .utils import (make_prediction,
                     insert_bucket_scores,
                     insert_entity_scores)
 
-os.chdir(os.path.dirname(__file__))
-path = os.getcwd()
-
-HELPER_DIRECTORY = "{}/{}".format(path, "helpers")
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,6 +24,11 @@ def risk_classification():
     """
     download once and load when running from production
     """
+
+    os.chdir(os.path.dirname(__file__))
+    path = os.getcwd()
+
+    HELPER_DIRECTORY = "{}/{}".format(path, "helpers")
 
     nltk.download('punkt')
     nltk.download('stopwords')
