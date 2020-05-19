@@ -89,7 +89,7 @@ def get_articles():
                 WHERE entity."storyID_id" IS null
                 AND "language" in ('IE', 'english', 'US', 'SG', 'GB', 'AU', 'NZ')
                 AND "scenarioID_id" in (SELECT uuid FROM apis_scenario as2 WHERE status = 'active')
-                LIMIT 10
+                LIMIT 5000
             """
 
     response = connect(query)

@@ -118,12 +118,12 @@ def insert_values():
                         for row in merged_df.itertuples(index=False)]
 
     # see if there are apis_entity elements in the stories
-    # match_manual_entity_to_story(df)
+    match_manual_entity_to_story(df)
 
-    # insert_story_entity_ref(STORY_REF_INPUTS)
-    # insert_story_entity_map(STORY_MAP_INPUTS)
+    insert_story_entity_ref(STORY_REF_INPUTS)
+    insert_story_entity_map(STORY_MAP_INPUTS)
 
-    # logging.info("finished")
+    logging.info("finished")
 
-    # logging.info("delete articles without entities")
-    # articles_without_entities(df, story_entity_df)
+    logging.info("delete articles without entities")
+    articles_without_entities(df, story_entity_df)
