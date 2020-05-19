@@ -89,7 +89,7 @@ def get_articles():
                 WHERE entity."storyID_id" IS null
                 AND "language" in ('IE', 'english', 'US', 'SG', 'GB', 'AU', 'NZ', 'CA')
                 AND "scenarioID_id" in (SELECT uuid FROM apis_scenario as2 WHERE status = 'active')
-                LIMIT 500
+                LIMIT 5000
             """
 
     response = connect(query)
@@ -102,6 +102,7 @@ def articles_without_entities(df, entity_df):
     """
     delete articles that doesn't have entities
     """
+    entity_df["wiki"].fillna("", inplace=True)
     df = df.merge(entity_df, how="left", left_on="uuid", right_on="story_uuid")
     df = df[df.isnull().any(axis=1)]
 
@@ -227,7 +228,7 @@ def match_manual_entity_to_story(df):
     entities are in the story and create a link.
     """
     query = """
-            select entity.uuid, entity.name as legal_name
+            select entity.uuid, entity.name
             from apis_entity ae
             inner join apis_storyentityref entity
             on ae.uuid = entity.uuid
@@ -240,7 +241,7 @@ def match_manual_entity_to_story(df):
 
     for _, row in df.iterrows():
         for entity in results:
-            if entity[1].lower() in row["text"]:
+            if entity[1].lower() in str(row["text"]):
                 data = (str(uuid.uuid4()),
                         entity[0],
                         row["uuid"],

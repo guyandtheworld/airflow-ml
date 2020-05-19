@@ -49,18 +49,18 @@ def process_fuzzy(merged_df, alias):
             continue
 
         # try matching processed entity.name with all of the entities
-        best_match = process.extractOne(
-            entity.text, processed_orgs, processor=process_entity,
-            scorer=fuzz.token_set_ratio, score_cutoff=70)
+        # best_match = process.extractOne(
+        #     entity.text, processed_orgs, processor=process_entity,
+        #     scorer=fuzz.token_set_ratio, score_cutoff=70)
 
         # if match found and is of the same type
 
-        if best_match and \
-                entity.label == alias[alias["parent"] == best_match[0]].any().type:
-            merged_df.loc[index, 'entity_ref_id'] = best_match[0]
-            merged_df.loc[index, 'score'] = best_match[1]
-        else:
-            merged_df.loc[index, 'score'] = -2
+        # if best_match and \
+        #         entity.label == alias[alias["parent"] == best_match[0]].any().type:
+        #     merged_df.loc[index, 'entity_ref_id'] = best_match[0]
+        #     merged_df.loc[index, 'score'] = best_match[1]
+        # else:
+        merged_df.loc[index, 'score'] = -2
     return merged_df
 
 
