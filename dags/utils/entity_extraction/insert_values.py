@@ -75,6 +75,9 @@ def insert_values():
                 TYPES[row["label"]]
             ]
 
+        merged_df.at[index,
+                     "entity_id"] = row["entity_ref_id"]
+
     # if already matched, write story_entity_id into entity_id for mapping
     for index, row in merged_df[merged_df["score"].isnull()].iterrows():
         merged_df.at[index,
@@ -86,11 +89,12 @@ def insert_values():
     for _, value in new_alias.items():
         ENTITY_ALIAS_INPUTS.append(value)
 
-    print("parents: ", len(STORY_REF_INPUTS))
-    print("alias: ", len(ENTITY_ALIAS_INPUTS))
+    logging.info("parents: {}".format(len(STORY_REF_INPUTS)))
+    logging.info("alias: {}".format(len(ENTITY_ALIAS_INPUTS)))
 
     columns_to_drop = ["legal_name", "wiki", "label",
-                       "entity_ref_id", "entity_name", "text"]
+                       "entity_ref_id", "entity_name",
+                       "text", "score"]
     merged_df.drop(columns_to_drop, axis=1, inplace=True)
 
     # generate uuids for story_map
@@ -98,7 +102,6 @@ def insert_values():
     for _ in range(len(merged_df)):
         uuids.append(str(uuid.uuid4()))
 
-    print(merged_df.head())
     logging.info("check na {}".format(merged_df.isnull().values.any()))
 
     # input new_entites to table

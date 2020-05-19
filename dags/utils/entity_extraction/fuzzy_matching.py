@@ -43,7 +43,7 @@ def process_fuzzy(merged_df, alias):
 
         # match wikilink to any other wikilink, and if it has a alias, match it to that O(1)
         if wikilink and wikilink in all_wiki_links:
-            match = alias[alias['wikipedia'] == wikilink]['parent'][0]
+            match = alias[alias['wikipedia'] == wikilink]['parent'].iloc[0]
             merged_df.loc[index, 'entity_ref_id'] = match
             merged_df.loc[index, 'score'] = -1
             continue
@@ -78,9 +78,20 @@ def fuzzy_matching():
         'name', 'wikipedia', 'parent', 'type'])
 
     logging.info("Starting Fuzzy matching.")
+
     merged_df = pd.read_csv("merged_df.csv")
 
     merged_df['score'] = np.nan
 
     merged_df = process_fuzzy(merged_df, alias)
+
+    logging.info("Found {} parents.".format(
+        merged_df[merged_df["score"] == -2].shape[0]))
+
+    logging.info("Matched {} with wikilinks.".format(
+        merged_df[merged_df["score"] == -1].shape[0]))
+
+    logging.info("Matched {} with fuzzymatching.".format(
+        merged_df[merged_df["score"] > -1].shape[0]))
+
     merged_df.to_csv("merged_fuzzy_df.csv", index=False)

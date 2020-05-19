@@ -87,7 +87,7 @@ def get_articles():
                 from apis_storybody where status_code=200 group by "storyID_id") AS body
                 ON story.uuid = body."storyID_id"
                 WHERE entity."storyID_id" IS null
-                AND "language" in ('english', 'US', 'CA', 'AU', 'IE')
+                AND "language" in ('IE', 'english', 'US', 'SG', 'GB', 'AU', 'NZ')
                 AND "scenarioID_id" in (SELECT uuid FROM apis_scenario as2 WHERE status = 'active')
                 LIMIT 10
             """
@@ -116,6 +116,7 @@ def articles_without_entities(df, entity_df):
                    'delete from apis_entityscore ae where "storyID_id" in {}',
                    'delete from apis_storybody ae where "storyID_id" in {}',
                    'delete from apis_storysentiment ae where "storyID_id" in {}',
+                   'delete from ml_clustermap ae where "storyID_id" in {}',
                    'delete from apis_story as2 where uuid in {}']
 
         for query in QUERIES:
