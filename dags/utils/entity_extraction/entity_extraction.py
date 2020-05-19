@@ -13,6 +13,15 @@ from .utils import (get_articles,
 logging.basicConfig(level=logging.INFO)
 
 
+def isEnglish(s):
+    try:
+        s.encode(encoding='utf-8').decode('ascii')
+    except UnicodeDecodeError:
+        return False
+    else:
+        return True
+
+
 def extract_entities():
     """
     extracts entities using spaCy from the body
@@ -39,8 +48,9 @@ def extract_entities():
             starttime = time.time()
 
         text = "{} {}".format(row["title"], row["body"])[:999]
-        entities = analyze_entities(client, row["uuid"], text)
-        values += entities
+        if isEnglish(text):
+            entities = analyze_entities(client, row["uuid"], text)
+            values += entities
 
         if not i % 100:
             logging.info("processed: {}".format(i))
