@@ -259,7 +259,8 @@ def insert_entity_alias(values):
     query = """
             INSERT INTO public.entity_alias
             (uuid, "name", wikipedia, score, created_at, "parentID_id", "typeID_id")
-            VALUES(%s, %s, %s, %s, %s, %s, %s);
+            VALUES(%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING;
             """
 
     publish_values(query, values, source="airflow_entity_extraction_alias")
@@ -269,7 +270,8 @@ def insert_story_entity_ref(values):
     query = """
             INSERT INTO public.apis_storyentityref
             (uuid, "name", "typeID_id", wikipedia, render, created_at)
-            VALUES(%s, %s, %s, %s, %s, %s);
+            VALUES(%s, %s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING;
             """
 
     publish_values(query, values, source="airflow_entity_extraction_entityref")
@@ -279,7 +281,8 @@ def insert_story_entity_map(values):
     query = """
             INSERT INTO public.apis_storyentitymap
             (uuid, "entityID_id", "storyID_id", mentions, salience, created_at)
-            VALUES(%s, %s, %s, %s, %s, %s);
+            VALUES(%s, %s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING;
             """
 
     publish_values(query, values, source="airflow_entity_extraction_entitymap")
