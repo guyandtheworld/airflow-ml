@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime
 from .utils import (insert_story_entity_ref,
                     insert_story_entity_map,
+                    insert_entity_alias,
                     get_types_ids,
                     match_manual_entity_to_story,
                     articles_without_entities)
@@ -121,6 +122,7 @@ def insert_values():
     match_manual_entity_to_story(df)
 
     insert_story_entity_ref(STORY_REF_INPUTS)
+    insert_entity_alias(ENTITY_ALIAS_INPUTS)
     insert_story_entity_map(STORY_MAP_INPUTS)
 
     logging.info("finished")

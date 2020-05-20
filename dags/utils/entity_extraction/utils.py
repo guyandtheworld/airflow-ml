@@ -263,7 +263,7 @@ def insert_entity_alias(values):
             ON CONFLICT DO NOTHING;
             """
 
-    publish_values(query, values, source="airflow_entity_extraction_alias")
+    insert_values(query, values)
 
 
 def insert_story_entity_ref(values):
@@ -274,7 +274,7 @@ def insert_story_entity_ref(values):
             ON CONFLICT DO NOTHING;
             """
 
-    publish_values(query, values, source="airflow_entity_extraction_entityref")
+    insert_values(query, values)
 
 
 def insert_story_entity_map(values):
@@ -285,4 +285,4 @@ def insert_story_entity_map(values):
             ON CONFLICT DO NOTHING;
             """
 
-    publish_values(query, values, source="airflow_entity_extraction_entitymap")
+    insert_values(query, values)
