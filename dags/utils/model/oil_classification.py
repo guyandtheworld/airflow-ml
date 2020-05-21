@@ -67,19 +67,20 @@ def semantic_search(text, keys):
         if (find != -1):
             return 1
 
-    key_vectors = embed(keys).numpy()
+    # key_vectors = embed(keys).numpy()
 
-    vec = CountVectorizer(ngram_range=(1, 2), stop_words=stops)
-    _ = vec.fit_transform([text])
-    features = vec.get_feature_names()
-    vectors = embed(features).numpy()
-    similarity = cosine_similarity(vectors, key_vectors)
-    bool_result = int(np.any(similarity > 0.49))
+    # vec = CountVectorizer(ngram_range=(1, 2), stop_words=stops)
+    # _ = vec.fit_transform([text])
+    # features = vec.get_feature_names()
+    # vectors = embed(features).numpy()
+    # similarity = cosine_similarity(vectors, key_vectors)
+    # bool_result = int(np.any(similarity > 0.49))
 
-    if bool_result:
-        return 1
-    else:
-        return 0
+    # if bool_result:
+    #     return 1
+    # else:
+    #     return 0
+    return 0
 
 
 def search(text, bucket_keywords):
@@ -110,11 +111,11 @@ def oil_classification():
     """
     Classify the text to find important events in Oil Scenario
     """
-    global embed
+    # global embed
 
-    download_and_extract_model()
+    # download_and_extract_model()
 
-    embed = hub.load(model_path)
+    # embed = hub.load(model_path)
 
     # fetch the latest model name from db
     results = get_model_details(scenario="Oil")
