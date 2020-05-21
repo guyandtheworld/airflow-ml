@@ -89,7 +89,7 @@ def get_articles():
                 WHERE entity."storyID_id" IS null
                 AND "language" in ('IE', 'english', 'US', 'SG', 'GB', 'AU', 'NZ', 'CA')
                 AND "scenarioID_id" in (SELECT uuid FROM apis_scenario as2 WHERE status = 'active')
-                LIMIT 5000
+                LIMIT 1000
             """
 
     response = connect(query)
@@ -259,8 +259,7 @@ def insert_entity_alias(values):
     query = """
             INSERT INTO public.entity_alias
             (uuid, "name", wikipedia, score, created_at, "parentID_id", "typeID_id")
-            VALUES(%s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT DO NOTHING;
+            VALUES(%s, %s, %s, %s, %s, %s, %s);
             """
 
     insert_values(query, values)
@@ -270,8 +269,7 @@ def insert_story_entity_ref(values):
     query = """
             INSERT INTO public.apis_storyentityref
             (uuid, "name", "typeID_id", wikipedia, render, created_at)
-            VALUES(%s, %s, %s, %s, %s, %s)
-            ON CONFLICT DO NOTHING;
+            VALUES(%s, %s, %s, %s, %s, %s);
             """
 
     insert_values(query, values)
@@ -281,8 +279,7 @@ def insert_story_entity_map(values):
     query = """
             INSERT INTO public.apis_storyentitymap
             (uuid, "entityID_id", "storyID_id", mentions, salience, created_at)
-            VALUES(%s, %s, %s, %s, %s, %s)
-            ON CONFLICT DO NOTHING;
+            VALUES(%s, %s, %s, %s, %s, %s);
             """
 
     insert_values(query, values)
