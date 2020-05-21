@@ -89,7 +89,8 @@ def extract_entities():
     # if exists in apis_story_ref, just add ref in map table
     results = connect(query, verbose=False)
 
-    logging.info("{} existing entity_alias found".format(len(results)))
+    logging.info("{}/{} existing entity_alias found".format(
+        len(results), len(check_label_in_story_ref)))
 
     story_entity_ref_df = pd.DataFrame(
         results, columns=["entity_ref_id", "entity_name"])
