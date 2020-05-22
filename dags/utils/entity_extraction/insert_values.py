@@ -34,6 +34,8 @@ def insert_values():
     new_parents = {}
     new_alias = {}
 
+    merged_df["wiki"].fillna("", inplace=True)
+
     # if score = -2, it needs new alias as well as new parents
     for index, row in merged_df[merged_df["score"] == -2].iterrows():
 
