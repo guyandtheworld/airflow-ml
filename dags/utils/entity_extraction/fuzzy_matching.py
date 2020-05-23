@@ -55,7 +55,7 @@ def process_fuzzy(merged_df, alias):
 
         # if match found and is of the same type
         if best_match and \
-                entity.label == alias[alias["parent"] == best_match[0]].any().type:
+                entity.label == alias[alias["parent"] == best_match[0]].iloc[0]["type"]:
             merged_df.loc[index, 'entity_ref_id'] = best_match[0]
             merged_df.loc[index, 'score'] = best_match[1]
         else:
@@ -70,8 +70,10 @@ def fuzzy_matching():
     * -2: Should be parent - create parent and corresponding Alias
     * 0 - 100: Match found using Fuzzy
     """
-    results = connect(
-        'select name, wikipedia, "parentID_id", "typeID_id" from entity_alias')
+    results = connect("""select alias.name, wikipedia, "parentID_id",
+                         enttype."name" from entity_alias alias
+                         inner join apis_entitytype enttype on
+                         alias."typeID_id" = enttype.uuid""")
 
     alias = pd.DataFrame(results, columns=[
         'name', 'wikipedia', 'parent', 'type'])
