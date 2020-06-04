@@ -2,7 +2,7 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta, datetime
 
-from utils.clustering.story_clustering import clustering
+from utils.clustering.story_clustering import backfill
 
 
 default_args = {
@@ -18,13 +18,14 @@ default_args = {
 
 
 dag = DAG(
-    'clustering', default_args=default_args,
+    'backfill_clustering', default_args=default_args,
     schedule_interval=timedelta(hours=1),
     catchup=False, max_active_runs=1)
 
 
-clustering = PythonOperator(task_id='clustering',
-                                    python_callable=clustering,
-                                    dag=dag)
+clustering = PythonOperator(task_id='cluster',
+                                    python_callable=backfill,
+                                    dag=dag,
+                                    provide_context=True)
 
 clustering

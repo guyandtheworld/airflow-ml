@@ -207,7 +207,7 @@ def insert_clustermap(CLUSTER_MAP):
     insert_values(query, CLUSTER_MAP)
 
 
-def clustering():
+def clustering(stories_date, stories_date_1):
     """
     Main clusterting function, which returns clusters on a specific date
     """
@@ -216,8 +216,6 @@ def clustering():
     download_and_extract_model()
     embed = hub.load(model_path)
 
-    stories_date = datetime.now()
-    stories_date_1 = stories_date - timedelta(days=1)
     END_DATE = stories_date_1
     DELTA = timedelta(days=10)
     START_DATE = END_DATE - DELTA
@@ -246,3 +244,21 @@ def clustering():
 
         insert_cluster(new_clusters)
         insert_clustermap(CLUSTER_MAP)
+
+
+def daily():
+    """
+    Daily Clustering
+    """
+    stories_date = datetime.now()
+    stories_date_1 = stories_date - timedelta(days=1)
+    clustering(stories_date, stories_date_1)
+
+
+def backfill(**context):
+    """
+    Backfill Clustering
+    """
+    stories_date = datetime.strptime(context['ds'], '%Y-%m-%d')
+    stories_date_1 = stories_date - timedelta(days=1)
+    clustering(stories_date, stories_date_1)
