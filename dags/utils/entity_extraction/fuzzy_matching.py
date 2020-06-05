@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 def process_entity(entity):
     stop_words = ['group', 'ltd', 'corporation', 'company', 'the', 'corp']
     processed_entity = ' '.join(
-        [word for word in entity.split() if word.lower() not in stop_words]).lower()
+        [word for word in str(entity).split() if word.lower() not in stop_words]).lower()
     return processed_entity
 
 

@@ -47,7 +47,7 @@ def extract_entities():
                 time.sleep(sleeptime)
             starttime = time.time()
 
-        text = "{} {}".format(row["title"], row["body"])[:999]
+        text = "{}. {}".format(row["title"], row["body"])[:999]
         if isEnglish(text):
             entities = analyze_entities(client, row["uuid"], text)
             values += entities
