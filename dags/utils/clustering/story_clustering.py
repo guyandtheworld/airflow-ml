@@ -219,11 +219,11 @@ def clustering(stories_date, stories_date_1):
     END_DATE = stories_date_1
     DELTA = timedelta(days=10)
     START_DATE = END_DATE - DELTA
-    start = START_DATE.strftime('%Y-%m-%d')
-    end = END_DATE.strftime('%Y-%m-%d')
+    start = str(START_DATE)
+    end = str(END_DATE)
 
-    stories_start = stories_date_1.strftime('%Y-%m-%d')
-    stories_end = stories_date.strftime('%Y-%m-%d')
+    stories_start = str(stories_date_1)
+    stories_end = str(stories_date)
 
     df = get_stories(start, end, stories_start, stories_end)
     new = df[df['clusterID_id'] == -1].index
