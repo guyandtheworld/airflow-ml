@@ -68,7 +68,11 @@ def get_stories(start, end, stories_start, stories_end):
     Get stories going back 10 days from the scrape date
     """
 
-    logging.info('Getting stories between {} and {}'.format(start, end))
+    logging.info('Getting new stories between {} and {}'.format(
+        stories_start, stories_end))
+
+    logging.info(
+        'Getting existing stories between {} and {}'.format(start, end))
 
     query_existing = """
                     select story.uuid as "storyID_id", story.title,
@@ -91,8 +95,6 @@ def get_stories(start, end, stories_start, stories_end):
                 and story.published_date >= '{}' and
                 story.published_date < '{}'
                 """.format(stories_start, stories_end)
-
-    print(query_new)
 
     df_newstories = pd.read_sql(query_new, connection).astype(
         str).set_index('storyID_id')

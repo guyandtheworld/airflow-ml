@@ -8,7 +8,7 @@ from utils.clustering.story_clustering import backfill
 default_args = {
     'owner': 'Airflow',
     'depends_on_past': False,
-    'start_date': datetime(2020, 1, 3),
+    'start_date': datetime(2019, 4, 1),
     'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,
@@ -19,8 +19,8 @@ default_args = {
 
 dag = DAG(
     'backfill_clustering', default_args=default_args,
-    schedule_interval=timedelta(hours=1),
-    catchup=False, max_active_runs=1)
+    schedule_interval=timedelta(days=1),
+    catchup=True, max_active_runs=1)
 
 
 clustering = PythonOperator(task_id='cluster',
