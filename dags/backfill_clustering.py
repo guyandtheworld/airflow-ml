@@ -8,8 +8,8 @@ from utils.clustering.story_clustering import backfill
 default_args = {
     'owner': 'Airflow',
     'depends_on_past': False,
-    'start_date': datetime(2019, 4, 1),
-    'end_date': datetime(2020, 6, 1),
+    'start_date': datetime(2020, 5, 1),
+    'end_date': datetime(2020, 8, 5),
     'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,
