@@ -61,13 +61,10 @@ def auto_class(**kwargs):
     # fetch the latest model name from db
     results = get_model_details(scenario=scenario)
 
-    print(results)
     if len(results) == 0:
         return
 
     bucket_ids, bucket_keywords = get_bucket_ids(scenario=scenario)
-
-    print(bucket_keywords)
 
     model_uuid = results[0][0]
 
@@ -79,6 +76,7 @@ def auto_class(**kwargs):
 
     if len(df) > 0:
         df["text"] = df[["title", "body"]].apply(merge, axis=1)
+        df["text"] = df["text"].str[:350]
 
     df.drop(['title', 'body'], axis=1, inplace=True)
 
