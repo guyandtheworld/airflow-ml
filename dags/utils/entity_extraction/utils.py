@@ -18,7 +18,7 @@ from utils.data.postgres_utils import (connect,
 logging.basicConfig(level=logging.INFO)
 
 
-def filter_entities(dict_obj, uuid, published_date):
+def filter_entities(dict_obj, uuid, published_date, scenario_id):
     """
     Convert the Entity response into format for our database.
 
@@ -40,6 +40,7 @@ def filter_entities(dict_obj, uuid, published_date):
         obj["type"] = entity["type"]
         obj["salience"] = entity["salience"]
         obj["published_date"] = published_date
+        obj["scenario_id"] = scenario_id
 
         if "metadata" in entity and "wikipedia_url" in entity["metadata"]:
             obj["wikipedia"] = entity["metadata"]["wikipedia_url"]
@@ -55,7 +56,7 @@ def filter_entities(dict_obj, uuid, published_date):
     return filtered
 
 
-def analyze_entities(client, uuid, published_date, text_content):
+def analyze_entities(client, uuid, published_date, scenario_id, text_content):
     """
     Analyzing Entities in a String
 
@@ -73,7 +74,7 @@ def analyze_entities(client, uuid, published_date, text_content):
     response = client.analyze_entities(document, encoding_type=encoding_type)
 
     dict_obj = MessageToDict(response)
-    dict_obj = filter_entities(dict_obj, uuid, published_date)
+    dict_obj = filter_entities(dict_obj, uuid, published_date, scenario_id)
     return dict_obj
 
 
@@ -83,8 +84,8 @@ def get_articles():
     Entity Recognition from active Scenarios
     """
     query = """
-                SELECT story.uuid, story.title, body.body, published_date FROM
-                public.apis_story story
+                SELECT story.uuid, story.title, body.body, story."scenarioID_id",
+                published_date FROM public.apis_story story
                 LEFT JOIN
                 (SELECT distinct "storyID_id" FROM public.apis_storyentitymap) entity
                 ON story.uuid = entity."storyID_id"
@@ -99,7 +100,7 @@ def get_articles():
 
     response = connect(query)
 
-    df = pd.DataFrame(response, columns=["uuid", "title", "body",
+    df = pd.DataFrame(response, columns=["uuid", "title", "body", "scenario_id",
                                          "published_date"])
     return df
 
@@ -311,15 +312,16 @@ def dump_into_entity(df):
     df["wiki"].fillna("", inplace=True)
 
     df = df[["uuid", "text", "wiki", "created_at", "published_date",
-             "salience", "mentions", "story_uuid", "label", "render"]]
+             "salience", "mentions", "story_uuid", "label", "scenario_id",
+             "render"]]
 
     DUMP = [tuple(row) for row in df.itertuples(index=False)]
 
     query = """
             INSERT INTO public.entity_dump
             (uuid, "name", wikipedia, created_at, published_date, salience,
-            mentions, "storyID_id", "typeID_id", render)
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            mentions, "storyID_id", "typeID_id", "scenarioID_id", render)
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
 
     logging.info("Insert {} entities into Entities Dump".format(len(DUMP)))
