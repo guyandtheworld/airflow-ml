@@ -7,7 +7,8 @@ from google.cloud import language_v1
 from utils.data.postgres_utils import connect
 from .utils import (get_articles,
                     get_entities,
-                    analyze_entities)
+                    analyze_entities,
+                    dump_into_entity)
 
 
 logging.basicConfig(level=logging.INFO)
@@ -49,7 +50,8 @@ def extract_entities():
 
         text = "{}. {}".format(row["title"], row["body"])[:999]
         if isEnglish(text):
-            entities = analyze_entities(client, row["uuid"], text)
+            entities = analyze_entities(client, row["uuid"],
+                                        row["published_date"], text)
             values += entities
 
         if not i % 100:
@@ -60,10 +62,13 @@ def extract_entities():
 
     story_entity_df = pd.DataFrame(
         values, columns=["story_uuid", "text", "label",
-                         "salience", "wiki", "mentions"])
+                         "salience", "published_date", "wiki", "mentions"])
 
     # set character length of 196
     story_entity_df["text"] = story_entity_df["text"].str.slice(0, 196)
+
+    dump_into_entity(story_entity_df)
+    story_entity_df.drop("published_date", axis=1, inplace=True)
 
     # fetch and add existing entities in api_entity
     entity_df = get_entities()

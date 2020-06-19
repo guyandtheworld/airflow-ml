@@ -11,13 +11,14 @@ from google.protobuf.json_format import MessageToDict
 from utils.data.postgres_utils import (connect,
                                        publish_values,
                                        delete_values,
-                                       insert_values)
+                                       insert_values,
+                                       publish_values)
 
 
 logging.basicConfig(level=logging.INFO)
 
 
-def filter_entities(dict_obj, uuid):
+def filter_entities(dict_obj, uuid, published_date):
     """
     Convert the Entity response into format for our database.
 
@@ -38,19 +39,23 @@ def filter_entities(dict_obj, uuid):
         obj["name"] = entity["name"].replace("'", "")
         obj["type"] = entity["type"]
         obj["salience"] = entity["salience"]
+        obj["published_date"] = published_date
+
         if "metadata" in entity and "wikipedia_url" in entity["metadata"]:
             obj["wikipedia"] = entity["metadata"]["wikipedia_url"]
         else:
             obj["wikipedia"] = ""
+
         if "mentions" in entity:
             obj["mentions"] = len(entity["mentions"])
         else:
             obj["mentions"] = 1
+
         filtered.append(tuple(obj.values()))
     return filtered
 
 
-def analyze_entities(client, uuid, text_content):
+def analyze_entities(client, uuid, published_date, text_content):
     """
     Analyzing Entities in a String
 
@@ -68,7 +73,7 @@ def analyze_entities(client, uuid, text_content):
     response = client.analyze_entities(document, encoding_type=encoding_type)
 
     dict_obj = MessageToDict(response)
-    dict_obj = filter_entities(dict_obj, uuid)
+    dict_obj = filter_entities(dict_obj, uuid, published_date)
     return dict_obj
 
 
@@ -78,7 +83,7 @@ def get_articles():
     Entity Recognition from active Scenarios
     """
     query = """
-                SELECT story.uuid, story.title, body.body FROM
+                SELECT story.uuid, story.title, body.body, published_date FROM
                 public.apis_story story
                 LEFT JOIN
                 (SELECT distinct "storyID_id" FROM public.apis_storyentitymap) entity
@@ -94,7 +99,8 @@ def get_articles():
 
     response = connect(query)
 
-    df = pd.DataFrame(response, columns=["uuid", "title", "body"])
+    df = pd.DataFrame(response, columns=["uuid", "title", "body",
+                                         "published_date"])
     return df
 
 
@@ -283,3 +289,39 @@ def insert_story_entity_map(values):
             """
 
     insert_values(query, values)
+
+
+def dump_into_entity(df):
+    """
+    Dump all the entities into entity_dump.
+    """
+    TYPES = get_types_ids(list(df["label"].unique()))
+
+    df["label"] = df["label"].apply(lambda x: TYPES[x])
+
+    uuids = []
+    for _ in range(len(df)):
+        uuids.append(str(uuid.uuid4()))
+
+    df["uuid"] = uuids
+    df["created_at"] = str(datetime.utcnow())
+    df["render"] = True
+    df["published_date"] = df["published_date"].apply(str)
+
+    df["wiki"].fillna("", inplace=True)
+
+    df = df[["uuid", "text", "wiki", "created_at", "published_date",
+             "salience", "mentions", "story_uuid", "label", "render"]]
+
+    DUMP = [tuple(row) for row in df.itertuples(index=False)]
+
+    query = """
+            INSERT INTO public.entity_dump
+            (uuid, "name", wikipedia, created_at, published_date, salience,
+            mentions, "storyID_id", "typeID_id", render)
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+
+    logging.info("Insert {} entities into Entities Dump".format(len(DUMP)))
+
+    publish_values(query, DUMP, "entity_dump")
