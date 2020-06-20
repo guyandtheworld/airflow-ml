@@ -69,7 +69,7 @@ def extract_entities():
     # set character length of 196
     story_entity_df["text"] = story_entity_df["text"].str.slice(0, 196)
 
-    dump_into_entity(story_entity_df)
+    dump_into_entity(story_entity_df.copy())
     story_entity_df.drop(["published_date", "scenario_id"], axis=1, inplace=True)
 
     # fetch and add existing entities in api_entity
