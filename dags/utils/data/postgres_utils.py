@@ -3,6 +3,7 @@ import os
 import psycopg2
 import json
 import time
+import pandas as pd
 
 from google.cloud import pubsub_v1
 
@@ -58,6 +59,15 @@ def connect(query='SELECT version()', verbose=True, args=None):
             conn.close()
 
     return results
+
+
+def select_as_pandas(query):
+    """
+    Return data as pandas
+    """
+    connection = psycopg2.connect(**params)
+    df = pd.read_sql(query, connection)
+    return df
 
 
 def insert_values(sql, insert_list):

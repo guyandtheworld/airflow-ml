@@ -3,8 +3,8 @@ import logging
 import pandas as pd
 
 from datetime import datetime
-
-
+from collections import defaultdict
+from flashtext import KeywordProcessor
 from google.cloud.language_v1 import enums
 from google.protobuf.json_format import MessageToDict
 
@@ -12,10 +12,71 @@ from utils.data.postgres_utils import (connect,
                                        publish_values,
                                        delete_values,
                                        insert_values,
-                                       publish_values)
+                                       select_as_pandas)
 
 
 logging.basicConfig(level=logging.INFO)
+
+
+def fetch_custom_entities():
+    """
+    Fetch custom Entities from our db.
+    """
+    query = """
+            SELECT custom.name, entype."name" AS entity,
+            custom."typeID_id" FROM entity_custom custom
+            INNER JOIN apis_entitytype entype
+            ON custom."typeID_id" = entype.uuid
+            """
+
+    results = select_as_pandas(query)
+
+    results = results[['name', 'entity']].groupby(
+        'entity')['name'].apply(list).to_dict()
+
+    return results
+
+
+def custom_entity_extraction(uuid, date, scenario_id, text, dic_ref):
+    """
+    Goes through the news for the
+    Custom Entities that we defined
+    """
+
+    columns = ["story_uuid", "text", "label",
+               "salience", "published_date",
+               "scenario_id", "wiki", "mentions"]
+
+    processor = KeywordProcessor()
+    processor.add_keywords_from_dict(dic_ref)
+    found = processor.extract_keywords(text, span_info=True,)
+    dic = defaultdict(list)
+
+    for i, j, k in found:
+
+        if i not in dic.keys():
+            dic[i] = [text[j:k]]
+        else:
+            dic[i].append(text[j:k])
+
+    final = pd.DataFrame()
+    for key in dic.keys():
+        df = pd.DataFrame({'label': key, 'text': dic[key], 'mentions': 1})
+        final = final.append(df)
+
+    logging.info("{} Custom Entities found.".format(final.shape[0]))
+    if final.shape[0] == 0:
+        return []
+
+    final = final.groupby(['label', 'text'], as_index=False)[
+        'mentions'].agg('sum')
+    final['story_uuid'] = uuid
+    final['published_date'] = date
+    final['scenario_id'] = scenario_id
+    final['salience'] = 0
+    final['wiki'] = "custom"
+
+    return final[columns].values.tolist()
 
 
 def filter_entities(dict_obj, uuid, published_date, scenario_id):

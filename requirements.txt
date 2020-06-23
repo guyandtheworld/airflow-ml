@@ -3,6 +3,7 @@ colorama==0.4.3
 cryptography==2.8
 dragnet==2.0.4
 dnspython==1.16.0
+flashtext==2.7
 google-cloud-storage==1.23.0
 google-cloud-pubsub==1.2.0
 nltk==3.5

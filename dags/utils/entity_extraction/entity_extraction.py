@@ -8,7 +8,9 @@ from utils.data.postgres_utils import connect
 from .utils import (get_articles,
                     get_entities,
                     analyze_entities,
-                    dump_into_entity)
+                    dump_into_entity,
+                    custom_entity_extraction,
+                    fetch_custom_entities)
 
 
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +34,11 @@ def extract_entities():
     df = get_articles()
 
     values = []
+
+    values_custom = []
+
+    dic_ref = fetch_custom_entities()
+
     logging.info("extracting entities from {} articles".format(len(df)))
 
     client = language_v1.LanguageServiceClient()
@@ -55,6 +62,13 @@ def extract_entities():
                                         row["scenario_id"], text)
             values += entities
 
+            entities = custom_entity_extraction(row["uuid"],
+                                                row["published_date"],
+                                                row["scenario_id"],
+                                                text,
+                                                dic_ref)
+            values_custom += entities
+
         if not i % 100:
             logging.info("processed: {}".format(i))
 
@@ -66,11 +80,21 @@ def extract_entities():
                          "salience", "published_date",
                          "scenario_id", "wiki", "mentions"])
 
+    story_entity_custom_df = pd.DataFrame(
+        values_custom, columns=["story_uuid", "text", "label",
+                                "salience", "published_date",
+                                "scenario_id", "wiki", "mentions"])
+
+    # remove conflicting samples from Google EE and PP
+    story_entity_df = story_entity_custom_df.append(story_entity_df).drop_duplicates(
+        ['story_uuid', 'text']).reset_index(drop=True)
+
     # set character length of 196
     story_entity_df["text"] = story_entity_df["text"].str.slice(0, 196)
 
     dump_into_entity(story_entity_df.copy())
-    story_entity_df.drop(["published_date", "scenario_id"], axis=1, inplace=True)
+    story_entity_df.drop(
+        ["published_date", "scenario_id"], axis=1, inplace=True)
 
     # fetch and add existing entities in api_entity
     entity_df = get_entities()
