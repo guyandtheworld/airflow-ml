@@ -99,7 +99,12 @@ def fetch_scenarios():
             {"scenario": scenario[0], "mode": scenario[2]})
 
         logging.info("publishing {}".format(scenario[1]))
+
         publish(message)
+        if scenario[2] == 'auto':
+            message = json.dumps(
+                {"scenario": scenario[0], "mode": "portfolio"})
+            publish(message)
 
 
 generate = PythonOperator(task_id='generate',
