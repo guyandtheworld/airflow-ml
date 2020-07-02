@@ -169,6 +169,9 @@ def get_max_cluster_num():
     max_num = pd.read_sql(
         'select max("cluster") from ml_cluster',
         connection).values[0][0]
+
+    if max_num is None:
+        max_num = 1
     return max_num
 
 
