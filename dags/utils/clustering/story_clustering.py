@@ -134,7 +134,7 @@ def cluster_stories(df):
             columns=df_vectors.index,
             index=['similarity']).T
 
-        similar = similarity[similarity['similarity'] > 0.6].sort_values(
+        similar = similarity[similarity['similarity'] > 0.5].sort_values(
             by='similarity', ascending=False).drop(story[0])
 
         if len(similar) > 0:
