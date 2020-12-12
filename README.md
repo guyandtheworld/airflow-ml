@@ -56,7 +56,7 @@ AIRFLOW__WEBSERVER__RBAC=True
 
 * Creating a New User
 
-    `airflow create_user -r Admin -u dev -e adarsh@alrt.ai -f adarsh -l s -p alrtai2019`
+    `airflow create_user -r Admin -u dev -e adarsh@alrt.ai -f username -l s -p password`
 
 * Configuring Fernet Key for Production
 
