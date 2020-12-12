@@ -1,4 +1,4 @@
-# rey : ML and Pre-Processing Automation
+# airflow-ml : ML and Pre-Processing Automation
 
 rey is the workflow manager which used Airflow to automate all the Machine Learning and Data Pre-processing pipelines in our system. Some of the steps in our pipeline are
 * Fetching and indexing raw data and entities which are in the bucket
