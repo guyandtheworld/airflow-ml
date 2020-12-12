@@ -1,11 +1,12 @@
 # airflow-ml : ML and Pre-Processing Automation
 
-rey is the workflow manager which used Airflow to automate all the Machine Learning and Data Pre-processing pipelines in our system. Some of the steps in our pipeline are
+This is a workflow manager which uses Airflow to automate all the Machine Learning and Data Pre-processing pipelines in our system. Some of the most important steps in our pipeline are
 * Fetching and indexing raw data and entities which are in the bucket
 * Economic News Detection (To-be-done)
 * Text Extraction - By hitting the news URL and fetching data
 * Some cleaning, indexing and preprocessing - Probably storing it in a relational database
 * Sentiment Analysis
+* Fuzzy Matching
 * Entity Extraction
 * Custom Scoring Model (BERT)
 
